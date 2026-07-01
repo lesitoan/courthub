@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
     ChevronLeft,
@@ -7,7 +7,7 @@ import {
     Calendar as CalendarIcon,
     Repeat
 } from 'lucide-react';
-import { cn, formatCurrency, formatDate } from '@/lib/utils';
+import { cn, formatCurrency, formatDate, formatDateInput } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { bookingApi, Booking } from '@/services/booking.service';
 import { venueApi, Venue } from '@/services/venue.service';
@@ -15,31 +15,45 @@ import { useToast } from '@/hooks/use-toast';
 import { ViewToggle, CalendarViewMode, MiniCalendar, WeekView, ListView } from '@/components/calendar';
 import { RecurringBookingModal, BookingDetailPanel, NewBookingModal, EditBookingModal } from '@/components/booking';
 import { recurringBookingApi, RecurringBookingInput } from '@/services/recurring-booking.service';
+import { isOnlineBooking } from '@/lib/booking-meta';
 
-// Time slots from 6:00 to 23:00
-const TIME_SLOTS = Array.from({ length: 18 }, (_, i) => {
+// Time slots from 6:00 to 22:00; each empty cell represents a 1-hour range.
+const TIME_SLOTS = Array.from({ length: 17 }, (_, i) => {
     const hour = i + 6;
     return `${hour.toString().padStart(2, '0')}:00`;
 });
+const SLOT_HEIGHT = 76;
 
-interface BookingSlot {
-    booking: Booking;
-    gridRow: number;
-    gridRowSpan: number;
+function addOneHour(time: string) {
+    const [hour, minute] = time.split(':').map(Number);
+    return `${String(hour + 1).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
 }
 
-function getBookingSlot(booking: Booking): BookingSlot {
-    const [startH, startM] = booking.startTime.split(':').map(Number);
-    const [endH, endM] = booking.endTime.split(':').map(Number);
+function timeToMinutes(time: string) {
+    const [hour, minute] = time.slice(0, 5).split(':').map(Number);
+    return hour * 60 + minute;
+}
 
-    const startRow = (startH - 6) * 2 + Math.floor(startM / 30) + 2; // +2 for header
-    const endRow = (endH - 6) * 2 + Math.floor(endM / 30) + 2;
+function getBookingCardHeight(booking: Booking) {
+    const durationMinutes = Math.max(60, timeToMinutes(booking.endTime) - timeToMinutes(booking.startTime));
+    return (durationMinutes / 60) * SLOT_HEIGHT - 12;
+}
 
-    return {
-        booking,
-        gridRow: startRow,
-        gridRowSpan: Math.max(endRow - startRow, 1),
-    };
+function getBookingStartAt(booking: Booking) {
+    const result = new Date(booking.date);
+    const [hours, minutes] = booking.startTime.slice(0, 5).split(':').map(Number);
+    result.setHours(hours, minutes || 0, 0, 0);
+    return result;
+}
+
+function getCheckInWindowStart(booking: Booking) {
+    const result = getBookingStartAt(booking);
+    result.setMinutes(result.getMinutes() - 15);
+    return result;
+}
+
+function canCheckInNow(booking: Booking) {
+    return new Date().getTime() >= getCheckInWindowStart(booking).getTime();
 }
 
 function getStatusColor(status: string): string {
@@ -64,6 +78,22 @@ function getStatusLabel(status: string): string {
     }
 }
 
+function isStaffBookableSlot(date: Date, time: string) {
+    const selectedDay = new Date(date);
+    selectedDay.setHours(0, 0, 0, 0);
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    if (selectedDay.getTime() < today.getTime()) return false;
+    if (selectedDay.getTime() > today.getTime()) return true;
+
+    const now = new Date();
+    const minHour = now.getMinutes() < 30 ? now.getHours() : now.getHours() + 1;
+    const minTime = `${String(minHour).padStart(2, '0')}:00`;
+    return time >= minTime;
+}
+
 export default function BookingCalendarPage() {
     const [selectedDate, setSelectedDate] = useState(() => {
         const today = new Date();
@@ -75,6 +105,7 @@ export default function BookingCalendarPage() {
     const [viewMode, setViewMode] = useState<CalendarViewMode>('day');
     const [showRecurringModal, setShowRecurringModal] = useState(false);
     const [showNewBookingModal, setShowNewBookingModal] = useState(false);
+    const [activeSlot, setActiveSlot] = useState<{ courtId: string; time: string; endTime: string } | null>(null);
     const [showEditBookingModal, setShowEditBookingModal] = useState(false);
     const [editingBooking, setEditingBooking] = useState<Booking | null>(null);
     const { toast } = useToast();
@@ -95,27 +126,69 @@ export default function BookingCalendarPage() {
 
     // Fetch calendar data
     const { data: calendarData, isLoading } = useQuery({
-        queryKey: ['calendar', selectedVenueId, selectedDate.toISOString().split('T')[0]],
+        queryKey: ['calendar', selectedVenueId, formatDateInput(selectedDate)],
         queryFn: () => bookingApi.getCalendarData(
             selectedVenueId,
-            selectedDate.toISOString().split('T')[0],
-            selectedDate.toISOString().split('T')[0]
+            formatDateInput(selectedDate),
+            formatDateInput(selectedDate)
         ),
         enabled: !!selectedVenueId,
     });
 
     // Check-in mutation
-    const checkInMutation = useMutation({
-        mutationFn: (id: string) => bookingApi.checkIn(id),
+    const confirmMutation = useMutation({
+        mutationFn: (id: string) => bookingApi.update(id, { status: 'CONFIRMED' }),
         onSuccess: () => {
-            toast({ title: 'Check-in thành công!' });
+            toast({ title: 'Đã xác nhận lịch đặt!' });
             queryClient.invalidateQueries({ queryKey: ['calendar'] });
             setSelectedBooking(null);
         },
         onError: () => {
-            toast({ title: 'Lỗi khi check-in', variant: 'error' });
+            toast({ title: 'Lỗi khi xác nhận lịch đặt', variant: 'error' });
         },
     });
+
+    const checkInMutation = useMutation({
+        mutationFn: (id: string) => bookingApi.checkIn(id),
+        onSuccess: () => {
+            toast({ title: 'Check-in thanh cong!' });
+            queryClient.invalidateQueries({ queryKey: ['calendar'] });
+            setSelectedBooking(null);
+        },
+        onError: (error: any) => {
+            toast({
+                title: 'Khong the check-in',
+                description: error.response?.data?.message || 'Chi co the check-in truoc gio choi toi da 15 phut',
+                variant: 'error',
+            });
+        },
+    });
+
+    const handleCheckIn = (booking: Booking) => {
+        if (!canCheckInNow(booking)) {
+            toast({
+                title: 'Chua den gio check-in',
+                description: `Chi co the check-in tu ${getCheckInWindowStart(booking).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })} tro di.`,
+                variant: 'error',
+            });
+            return;
+        }
+
+        checkInMutation.mutate(booking.id);
+    };
+
+    const handleCheckInById = (id: string) => {
+        const booking = selectedBooking?.id === id
+            ? selectedBooking
+            : calendarData?.bookings.find(item => item.id === id);
+
+        if (booking) {
+            handleCheckIn(booking);
+            return;
+        }
+
+        checkInMutation.mutate(id);
+    };
 
     // Check-out mutation
     const checkOutMutation = useMutation({
@@ -162,14 +235,33 @@ export default function BookingCalendarPage() {
         setSelectedDate(today);
     };
 
-    // Process bookings for grid layout
-    const bookingsByCourtId = useMemo(() => {
+    const openNewBookingModal = (courtId?: string, time?: string, date?: Date) => {
+        const targetDate = date || selectedDate;
+        if (courtId && time && !isStaffBookableSlot(targetDate, time)) {
+            toast({
+                title: 'Không thể đặt khung giờ đã qua',
+                description: 'Vui lòng chọn khung giờ hợp lệ theo thời điểm hiện tại.',
+                variant: 'error',
+            });
+            return;
+        }
+
+        if (date) setSelectedDate(date);
+        setActiveSlot(courtId && time ? { courtId, time, endTime: addOneHour(time) } : null);
+        setShowNewBookingModal(true);
+    };
+
+    const isActiveSlot = (courtId: string, time: string) =>
+        activeSlot?.courtId === courtId && activeSlot.time === time;
+
+    const bookingsByCourtAndStart = useMemo(() => {
         if (!calendarData?.bookings) return {};
 
-        const map: Record<string, BookingSlot[]> = {};
-        calendarData.bookings.forEach(booking => {
-            if (!map[booking.courtId]) map[booking.courtId] = [];
-            map[booking.courtId].push(getBookingSlot(booking));
+        const map: Record<string, Record<string, Booking>> = {};
+        calendarData.bookings.forEach((booking) => {
+            const startTime = booking.startTime.slice(0, 5);
+            if (!map[booking.courtId]) map[booking.courtId] = {};
+            map[booking.courtId][startTime] = booking;
         });
         return map;
     }, [calendarData]);
@@ -190,7 +282,7 @@ export default function BookingCalendarPage() {
                         <Repeat className="w-4 h-4" />
                         <span className="hidden sm:inline">Lịch cố định</span>
                     </Button>
-                    <Button className="gap-2" onClick={() => setShowNewBookingModal(true)}>
+                    <Button className="gap-2" onClick={() => openNewBookingModal()}>
                         <Plus className="w-4 h-4" />
                         <span className="hidden sm:inline">Đặt sân mới</span>
                     </Button>
@@ -308,102 +400,127 @@ export default function BookingCalendarPage() {
                         <>
                             {/* Day View */}
                             {viewMode === 'day' && (
-                                <div
-                                    className="grid min-w-max"
-                                    style={{
-                                        gridTemplateColumns: `80px repeat(${calendarData?.courts.length || 1}, minmax(200px, 1fr))`,
-                                        gridTemplateRows: `auto repeat(${TIME_SLOTS.length * 2}, 30px)`,
-                                    }}
-                                >
-                                    {/* Header row */}
-                                    <div className="sticky top-0 left-0 z-20 bg-background-tertiary border-b border-r border-border" />
-                                    {calendarData?.courts.map((court) => (
-                                        <div
-                                            key={court.id}
-                                            className="sticky top-0 z-10 bg-background-tertiary border-b border-r border-border px-4 py-3 text-center font-medium"
-                                        >
-                                            {court.name}
-                                        </div>
-                                    ))}
-
-                                    {/* Time slots */}
-                                    {TIME_SLOTS.map((time, idx) => (
-                                        <React.Fragment key={`time-row-${time}`}>
-                                            {/* Time label - spans 2 rows (1 hour = 2 x 30min slots) */}
+                                <div className="min-w-[900px]">
+                                    <div
+                                        className="sticky top-0 z-20 grid bg-background-tertiary border-b border-border"
+                                        style={{
+                                            gridTemplateColumns: `80px repeat(${calendarData?.courts.length || 1}, minmax(180px, 1fr))`,
+                                        }}
+                                    >
+                                        <div className="border-r border-border" />
+                                        {calendarData?.courts.map((court) => (
                                             <div
-                                                key={`time-${time}`}
-                                                className="sticky left-0 z-10 bg-background-secondary border-r border-border px-3 py-1 text-xs text-foreground-secondary text-right"
-                                                style={{ gridRow: `${idx * 2 + 2} / span 2` }}
+                                                key={court.id}
+                                                className="border-r border-border px-4 py-3 text-center font-medium"
                                             >
+                                                {court.name}
+                                            </div>
+                                        ))}
+                                    </div>
+
+                                    {TIME_SLOTS.map((time) => (
+                                        <div
+                                            key={time}
+                                            className="grid border-b border-border/60"
+                                            style={{
+                                                gridTemplateColumns: `80px repeat(${calendarData?.courts.length || 1}, minmax(180px, 1fr))`,
+                                                height: SLOT_HEIGHT,
+                                            }}
+                                        >
+                                            <div className="sticky left-0 z-10 bg-background-secondary border-r border-border px-3 py-4 text-xs text-foreground-secondary text-right">
                                                 {time}
                                             </div>
+                                            {calendarData?.courts.map((court) => {
+                                                const booking = bookingsByCourtAndStart[court.id]?.[time];
+                                                const active = isActiveSlot(court.id, time);
+                                                const isPastSlot = !isStaffBookableSlot(selectedDate, time);
 
-                                            {/* Empty cells for each court */}
-                                            {calendarData?.courts.map((court) => (
-                                                <div
-                                                    key={`cell-${time}-${court.id}`}
-                                                    className={cn(
-                                                        'border-r border-b border-border/50 relative',
-                                                        idx % 2 === 0 ? 'border-b-border' : ''
-                                                    )}
-                                                    style={{ gridColumn: calendarData.courts.indexOf(court) + 2 }}
-                                                />
-                                            ))}
-                                        </React.Fragment>
-                                    ))}
-
-                                    {/* Bookings overlay */}
-                                    {calendarData?.courts.map((court, courtIdx) =>
-                                        bookingsByCourtId[court.id]?.map((slot) => (
-                                            <div
-                                                key={slot.booking.id}
-                                                className={cn(
-                                                    'absolute mx-1 my-0.5 p-2 rounded-lg border cursor-pointer transition-all hover:scale-[1.02] hover:shadow-lg group',
-                                                    getStatusColor(slot.booking.status)
-                                                )}
-                                                style={{
-                                                    gridColumn: courtIdx + 2,
-                                                    gridRow: `${slot.gridRow} / span ${slot.gridRowSpan}`,
-                                                    position: 'relative',
-                                                }}
-                                                onClick={() => setSelectedBooking(slot.booking)}
-                                            >
-                                                <div className="flex flex-col h-full overflow-hidden">
-                                                    <div className="flex items-center justify-between">
-                                                        <span className="text-xs font-medium">
-                                                            {slot.booking.startTime} - {slot.booking.endTime}
-                                                        </span>
-                                                        {/* Quick Check-in Button - visible on hover for CONFIRMED bookings */}
-                                                        {slot.booking.status === 'CONFIRMED' && (
+                                                return (
+                                                    <div
+                                                        key={`${time}-${court.id}`}
+                                                        className={cn(
+                                                            'relative h-[76px] overflow-visible border-r border-border/60 p-1.5 transition-colors',
+                                                            active && 'bg-primary-500/10'
+                                                        )}
+                                                    >
+                                                        {booking ? (
                                                             <button
-                                                                onClick={(e) => {
-                                                                    e.stopPropagation();
-                                                                    checkInMutation.mutate(slot.booking.id);
+                                                                type="button"
+                                                                className={cn(
+                                                                    'group absolute inset-x-1.5 top-1.5 z-20 flex min-h-[64px] flex-col rounded-lg border p-2 text-left transition-all hover:scale-[1.01] hover:shadow-lg',
+                                                                    getStatusColor(booking.status),
+                                                                    active && 'ring-2 ring-primary-500 ring-offset-2 ring-offset-background-secondary'
+                                                                )}
+                                                                style={{ height: getBookingCardHeight(booking) }}
+                                                                onClick={() => {
+                                                                    setActiveSlot({ courtId: court.id, time, endTime: booking.endTime.slice(0, 5) });
+                                                                    setSelectedBooking(booking);
                                                                 }}
-                                                                className="opacity-0 group-hover:opacity-100 bg-green-500 hover:bg-green-600 text-white text-[10px] px-2 py-0.5 rounded transition-all font-medium"
-                                                                title="Check-in nhanh"
                                                             >
-                                                                ✓ Check-in
+                                                                <div className="flex items-start justify-between gap-2">
+                                                                    <span className="text-xs font-medium">
+                                                                        {booking.startTime} - {booking.endTime}
+                                                                    </span>
+                                                                    {isOnlineBooking(booking.notes) ? (
+                                                                        <span className="rounded bg-primary-500/20 px-1.5 py-0.5 text-[10px] font-medium text-primary-500">
+                                                                            Trực tuyến
+                                                                        </span>
+                                                                    ) : (
+                                                                        <span className="text-[10px] opacity-75">
+                                                                            {getStatusLabel(booking.status)}
+                                                                        </span>
+                                                                    )}
+                                                                </div>
+                                                                {booking.customer && (
+                                                                    <div className="mt-1 truncate text-sm font-medium">
+                                                                        {booking.customer.name}
+                                                                    </div>
+                                                                )}
+                                                                <div className="mt-auto flex items-center justify-between gap-2 text-xs opacity-80">
+                                                                    <span>{formatCurrency(booking.totalAmount)}</span>
+                                                                    {booking.status === 'CONFIRMED' && (
+                                                                        <span
+                                                                            role="button"
+                                                                            tabIndex={0}
+                                                                            onClick={(e) => {
+                                                                                e.stopPropagation();
+                                                                                handleCheckIn(booking);
+                                                                            }}
+                                                                            onKeyDown={(e) => {
+                                                                                if (e.key === 'Enter' || e.key === ' ') {
+                                                                                    e.stopPropagation();
+                                                                                    handleCheckIn(booking);
+                                                                                }
+                                                                            }}
+                                                                            className="opacity-0 rounded bg-green-500 px-2 py-0.5 text-[10px] font-medium text-white transition-opacity group-hover:opacity-100"
+                                                                        >
+                                                                            Check-in
+                                                                        </span>
+                                                                    )}
+                                                                </div>
+                                                            </button>
+                                                        ) : (
+                                                            <button
+                                                                type="button"
+                                                                className={cn(
+                                                                    'h-full min-h-[64px] w-full rounded-lg border border-dashed text-xs transition-colors',
+                                                                    active
+                                                                        ? 'border-primary-500 bg-primary-500/15 text-primary-500 shadow-glow'
+                                                                        : isPastSlot
+                                                                            ? 'border-transparent text-foreground-muted/60 opacity-50 cursor-not-allowed hover:border-red-500/40 hover:bg-red-500/10'
+                                                                            : 'border-transparent text-foreground-muted hover:border-border hover:bg-background-tertiary'
+                                                                )}
+                                                                aria-disabled={isPastSlot}
+                                                                onClick={() => openNewBookingModal(court.id, time)}
+                                                            >
+                                                                +
                                                             </button>
                                                         )}
-                                                        {slot.booking.status !== 'CONFIRMED' && (
-                                                            <span className="text-[10px] opacity-75">
-                                                                {getStatusLabel(slot.booking.status)}
-                                                            </span>
-                                                        )}
                                                     </div>
-                                                    {slot.booking.customer && (
-                                                        <div className="mt-1 text-sm font-medium truncate">
-                                                            {slot.booking.customer.name}
-                                                        </div>
-                                                    )}
-                                                    <div className="mt-auto text-xs opacity-75">
-                                                        {formatCurrency(slot.booking.totalAmount)}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        ))
-                                    )}
+                                                );
+                                            })}
+                                        </div>
+                                    ))}
                                 </div>
                             )}
 
@@ -413,10 +530,7 @@ export default function BookingCalendarPage() {
                                     weekStartDate={selectedDate}
                                     courts={calendarData?.courts || []}
                                     bookings={calendarData?.bookings || []}
-                                    onSlotClick={(_courtId, date, _time) => {
-                                        setSelectedDate(date);
-                                        setShowNewBookingModal(true);
-                                    }}
+                                    onSlotClick={(courtId, date, time) => openNewBookingModal(courtId, time, date)}
                                     onBookingClick={setSelectedBooking}
                                 />
                             )}
@@ -438,9 +552,11 @@ export default function BookingCalendarPage() {
                 booking={selectedBooking}
                 isOpen={!!selectedBooking}
                 onClose={() => setSelectedBooking(null)}
-                onCheckIn={(id) => checkInMutation.mutate(id)}
+                onConfirm={(id) => confirmMutation.mutate(id)}
+                onCheckIn={handleCheckInById}
                 onCheckOut={(id) => checkOutMutation.mutate(id)}
                 onCancel={(id) => cancelMutation.mutate(id)}
+                isLoading={confirmMutation.isPending || checkInMutation.isPending || checkOutMutation.isPending || cancelMutation.isPending}
                 onEdit={(booking) => {
                     setEditingBooking(booking);
                     setShowEditBookingModal(true);
@@ -470,9 +586,14 @@ export default function BookingCalendarPage() {
                 onClose={() => setShowNewBookingModal(false)}
                 courts={calendarData?.courts || []}
                 selectedDate={selectedDate}
+                selectedCourtId={activeSlot?.courtId}
+                selectedTime={activeSlot?.time}
+                selectedEndTime={activeSlot?.endTime}
+                existingBookings={calendarData?.bookings || []}
                 onSuccess={() => {
                     toast({ title: 'Đã tạo lịch đặt sân!' });
                     setShowNewBookingModal(false);
+                    setActiveSlot(null);
                     queryClient.invalidateQueries({ queryKey: ['calendar'] });
                 }}
             />

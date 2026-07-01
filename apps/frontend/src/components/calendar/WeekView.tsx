@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { cn } from '@/lib/utils';
+import { cn, formatDateInput } from '@/lib/utils';
 import { Booking } from '@/services/booking.service';
 
 interface WeekViewProps {
@@ -44,7 +44,7 @@ export function WeekView({ weekStartDate, courts, bookings, onSlotClick, onBooki
         const map: Record<string, Record<string, Booking[]>> = {};
 
         bookings.forEach(booking => {
-            const dateKey = new Date(booking.date).toISOString().split('T')[0];
+            const dateKey = formatDateInput(new Date(booking.date));
             if (!map[dateKey]) map[dateKey] = {};
             if (!map[dateKey][booking.courtId]) map[dateKey][booking.courtId] = [];
             map[dateKey][booking.courtId].push(booking);
@@ -69,7 +69,7 @@ export function WeekView({ weekStartDate, courts, bookings, onSlotClick, onBooki
                     {/* Week grid */}
                     <div className="grid grid-cols-7 gap-1 p-2">
                         {weekDays.map((date, dayIdx) => {
-                            const dateKey = date.toISOString().split('T')[0];
+                            const dateKey = formatDateInput(date);
                             const dayBookings = bookingsByDateAndCourt[dateKey]?.[court.id] || [];
                             const isToday = date.toDateString() === today.toDateString();
 

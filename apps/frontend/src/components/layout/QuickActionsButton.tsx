@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Plus, X, Calendar, Users, Package, Receipt, Settings, Repeat } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { ADMIN_ROUTES } from '@/lib/routes';
 import { useNavigate } from 'react-router-dom';
 
 interface QuickAction {
@@ -35,7 +36,7 @@ export function QuickActionsButton({
             icon: Calendar,
             color: 'bg-green-500 hover:bg-green-600',
             onClick: onNewBooking,
-            path: '/calendar',
+            path: ADMIN_ROUTES.calendar,
         },
         {
             id: 'recurring',
@@ -50,7 +51,7 @@ export function QuickActionsButton({
             icon: Users,
             color: 'bg-purple-500 hover:bg-purple-600',
             onClick: onNewCustomer,
-            path: '/customers',
+            path: ADMIN_ROUTES.customers,
         },
         {
             id: 'invoice',
@@ -58,21 +59,21 @@ export function QuickActionsButton({
             icon: Receipt,
             color: 'bg-orange-500 hover:bg-orange-600',
             onClick: onNewInvoice,
-            path: '/invoices',
+            path: ADMIN_ROUTES.invoices,
         },
         {
             id: 'inventory',
             label: 'Nhập kho',
             icon: Package,
             color: 'bg-cyan-500 hover:bg-cyan-600',
-            path: '/inventory',
+            path: ADMIN_ROUTES.inventory,
         },
         {
             id: 'settings',
             label: 'Cài đặt',
             icon: Settings,
             color: 'bg-gray-500 hover:bg-gray-600',
-            path: '/settings',
+            path: ADMIN_ROUTES.settings,
         },
     ];
 
@@ -154,21 +155,21 @@ export function QuickActionsBar({
             label: 'Đặt sân',
             icon: Calendar,
             color: 'bg-green-500 hover:bg-green-600',
-            onClick: onNewBooking || (() => navigate('/calendar')),
+            onClick: onNewBooking || (() => navigate(ADMIN_ROUTES.calendar)),
         },
         {
             id: 'customer',
             label: 'Thêm khách',
             icon: Users,
             color: 'bg-purple-500 hover:bg-purple-600',
-            onClick: onNewCustomer || (() => navigate('/customers')),
+            onClick: onNewCustomer || (() => navigate(ADMIN_ROUTES.customers)),
         },
         {
             id: 'invoice',
             label: 'Hóa đơn',
             icon: Receipt,
             color: 'bg-orange-500 hover:bg-orange-600',
-            onClick: onNewInvoice || (() => navigate('/invoices')),
+            onClick: onNewInvoice || (() => navigate(ADMIN_ROUTES.invoices)),
         },
     ];
 
@@ -193,3 +194,4 @@ export function QuickActionsBar({
         </div>
     );
 }
+

@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input'
 import { useAuthStore } from '@/stores/auth.store'
 import { authService } from '@/services/auth.service'
 import { useToast } from '@/hooks/use-toast'
+import { ADMIN_ROUTES } from '@/lib/routes'
 
 const loginSchema = z.object({
     email: z.string().email('Email không hợp lệ'),
@@ -43,7 +44,7 @@ export default function LoginPage() {
                     description: `Chào mừng ${response.data.user.name}!`,
                     variant: 'success',
                 })
-                navigate('/')
+                navigate(ADMIN_ROUTES.dashboard)
             }
         } catch (error: any) {
             toast({
@@ -69,10 +70,8 @@ export default function LoginPage() {
 
                 {/* Logo */}
                 <div className="flex items-center gap-3 relative z-10">
-                    <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur">
-                        <span className="text-white font-bold text-xl">C</span>
-                    </div>
-                    <span className="text-2xl font-bold text-white">Courtify</span>
+                    <img src="/logo.png" alt="CourtHub Logo" className="h-10 w-auto object-contain" />
+                    <span className="text-2xl font-bold text-white">CourtHub</span>
                 </div>
 
                 {/* Content */}
@@ -108,10 +107,8 @@ export default function LoginPage() {
                 <div className="w-full max-w-md">
                     {/* Mobile logo */}
                     <div className="lg:hidden flex items-center gap-3 mb-8 justify-center">
-                        <div className="w-10 h-10 bg-primary-500 rounded-xl flex items-center justify-center">
-                            <span className="text-white font-bold text-xl">C</span>
-                        </div>
-                        <span className="text-2xl font-bold text-primary-500">Courtify</span>
+                        <img src="/logo.png" alt="CourtHub Logo" className="h-10 w-auto object-contain" />
+                        <span className="text-2xl font-bold text-primary-500">CourtHub</span>
                     </div>
 
                     <div className="mb-8">
@@ -157,7 +154,7 @@ export default function LoginPage() {
                                 />
                                 <span className="text-sm text-foreground-secondary">Ghi nhớ đăng nhập</span>
                             </label>
-                            <Link to="/forgot-password" className="text-sm text-primary-500 hover:underline">
+                            <Link to={ADMIN_ROUTES.forgotPassword} className="text-sm text-primary-500 hover:underline">
                                 Quên mật khẩu?
                             </Link>
                         </div>
@@ -186,3 +183,4 @@ export default function LoginPage() {
         </div>
     )
 }
+

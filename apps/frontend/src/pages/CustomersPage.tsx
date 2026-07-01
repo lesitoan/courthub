@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
     Search,
@@ -18,6 +19,7 @@ import { cn, formatCurrency } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { customerApi, Customer, CreateCustomerInput } from '@/services/customer.service';
 import { useToast } from '@/hooks/use-toast';
+import { ADMIN_ROUTES } from '@/lib/routes';
 
 function getMembershipColor(tier?: string): string {
     switch (tier) {
@@ -49,6 +51,7 @@ export default function CustomersPage() {
 
     const { toast } = useToast();
     const queryClient = useQueryClient();
+    const navigate = useNavigate();
 
     // Fetch customers
     const { data: customersData, isLoading } = useQuery({
@@ -205,7 +208,8 @@ export default function CustomersPage() {
                         {customersData?.data.map((customer) => (
                             <div
                                 key={customer.id}
-                                className="bg-background-secondary border border-border rounded-lg p-4 hover:border-primary-500/50 transition-colors"
+                                onClick={() => navigate(ADMIN_ROUTES.customerDetail(customer.id))}
+                                className="bg-background-secondary border border-border rounded-lg p-4 hover:border-primary-500/50 transition-colors cursor-pointer"
                             >
                                 <div className="flex items-start justify-between">
                                     {/* Customer Info */}
@@ -260,13 +264,19 @@ export default function CustomersPage() {
                                     {/* Actions */}
                                     <div className="flex items-center gap-2">
                                         <button
-                                            onClick={() => openEditModal(customer)}
+                                            onClick={(event) => {
+                                                event.stopPropagation();
+                                                openEditModal(customer);
+                                            }}
                                             className="p-2 hover:bg-background-tertiary rounded-lg transition-colors"
                                         >
                                             <Edit2 className="w-4 h-4 text-foreground-secondary" />
                                         </button>
                                         <button
-                                            onClick={() => handleDelete(customer)}
+                                            onClick={(event) => {
+                                                event.stopPropagation();
+                                                handleDelete(customer);
+                                            }}
                                             className="p-2 hover:bg-red-500/10 rounded-lg transition-colors"
                                         >
                                             <Trash2 className="w-4 h-4 text-red-500" />

@@ -307,7 +307,7 @@ function generatePDFContent(
     </table>
     
     <div class="footer">
-        <p>Báo cáo được tạo tự động bởi Courtify - Hệ thống Quản lý Sân Cầu Lông</p>
+        <p>Báo cáo được tạo tự động bởi CourtHub - Hệ thống Quản lý Sân Cầu Lông</p>
     </div>
     
     <div class="no-print" style="margin-top: 20px; text-align: center;">

@@ -7,12 +7,13 @@ import {
     Menu
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { ADMIN_ROUTES } from '@/lib/routes';
 
 const navItems = [
-    { name: 'Trang chủ', href: '/', icon: LayoutDashboard },
-    { name: 'Lịch', href: '/calendar', icon: Calendar },
-    { name: 'Khách', href: '/customers', icon: Users },
-    { name: 'Hóa đơn', href: '/invoices', icon: FileText },
+    { name: 'Trang chủ', href: ADMIN_ROUTES.dashboard, icon: LayoutDashboard },
+    { name: 'Lịch', href: ADMIN_ROUTES.calendar, icon: Calendar },
+    { name: 'Khách', href: ADMIN_ROUTES.customers, icon: Users },
+    { name: 'Hóa đơn', href: ADMIN_ROUTES.invoices, icon: FileText },
     { name: 'Thêm', href: '#', icon: Menu },
 ];
 
@@ -41,3 +42,4 @@ export function BottomNav() {
         </nav>
     );
 }
+

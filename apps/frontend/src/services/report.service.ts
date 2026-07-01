@@ -2,6 +2,7 @@ import api, { ApiResponse } from './api';
 
 export interface DashboardStats {
     todayRevenue: number;
+    actualTodayRevenue: number;
     todayBookings: number;
     activeCustomers: number;
     courtsAvailable: number;
@@ -12,6 +13,7 @@ export interface DashboardStats {
 export interface RevenueChartData {
     date: string;
     revenue: number;
+    actualRevenue: number;
     bookings: number;
 }
 
@@ -19,6 +21,9 @@ export interface MonthlyRevenue {
     currentMonth: number;
     lastMonth: number;
     growth: number;
+    actualCurrentMonth: number;
+    actualLastMonth: number;
+    actualGrowth: number;
 }
 
 export interface TopCustomer {

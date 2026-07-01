@@ -10,6 +10,7 @@ import serviceRoutes from './service.routes.js';
 import reportRoutes from './report.routes.js';
 import exportRoutes from './export.routes.js';
 import recurringBookingRoutes from './recurring-booking.routes.js';
+import publicRoutes from './public.routes.js';
 
 const router = Router();
 
@@ -23,6 +24,7 @@ router.get('/health', (req, res) => {
 });
 
 // Mount routes
+router.use('/public', publicRoutes);
 router.use('/auth', authRoutes);
 router.use('/venues', venueRoutes);
 router.use('/courts', courtRoutes);

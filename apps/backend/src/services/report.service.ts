@@ -1,8 +1,11 @@
 import prisma from '../config/database.js';
 import { startOfDay, endOfDay, subDays, startOfMonth, endOfMonth, format } from 'date-fns';
 
+const REVENUE_BOOKING_STATUSES = ['PENDING', 'CONFIRMED', 'IN_PROGRESS', 'COMPLETED'] as const;
+
 export interface DashboardStats {
     todayRevenue: number;
+    actualTodayRevenue: number;
     todayBookings: number;
     activeCustomers: number;
     courtsAvailable: number;
@@ -13,6 +16,7 @@ export interface DashboardStats {
 export interface RevenueChartData {
     date: string;
     revenue: number;
+    actualRevenue: number;
     bookings: number;
 }
 
@@ -40,17 +44,29 @@ export class ReportService {
         const currentHour = today.getHours();
         const currentTime = `${String(currentHour).padStart(2, '0')}:00`;
 
-        // Count paid invoices for today
-        const todayInvoices = await prisma.invoice.aggregate({
-            where: {
-                paymentStatus: 'PAID',
-                paidAt: {
-                    gte: startOfToday,
-                    lte: endOfToday,
+        // Booking revenue is shown immediately after a web booking is created.
+        const [todayBookingRevenue, actualTodayRevenue] = await Promise.all([
+            prisma.booking.aggregate({
+                where: {
+                    status: { in: [...REVENUE_BOOKING_STATUSES] },
+                    date: {
+                        gte: startOfToday,
+                        lte: endOfToday,
+                    },
                 },
-            },
-            _sum: { total: true },
-        });
+                _sum: { totalAmount: true },
+            }),
+            prisma.invoice.aggregate({
+                where: {
+                    paymentStatus: 'PAID',
+                    paidAt: {
+                        gte: startOfToday,
+                        lte: endOfToday,
+                    },
+                },
+                _sum: { total: true },
+            }),
+        ]);
 
         // Count today's bookings
         const todayBookings = await prisma.booking.count({
@@ -92,7 +108,8 @@ export class ReportService {
         });
 
         return {
-            todayRevenue: todayInvoices._sum.total || 0,
+            todayRevenue: todayBookingRevenue._sum.totalAmount || 0,
+            actualTodayRevenue: actualTodayRevenue._sum.total || 0,
             todayBookings,
             activeCustomers,
             courtsAvailable: totalCourts - courtsInUse,
@@ -110,14 +127,18 @@ export class ReportService {
             const start = startOfDay(date);
             const end = endOfDay(date);
 
-            const [revenue, bookingCount] = await Promise.all([
+            const [revenue, actualRevenue, bookingCount] = await Promise.all([
+                prisma.booking.aggregate({
+                    where: {
+                        date: { gte: start, lte: end },
+                        status: { in: [...REVENUE_BOOKING_STATUSES] },
+                    },
+                    _sum: { totalAmount: true },
+                }),
                 prisma.invoice.aggregate({
                     where: {
                         paymentStatus: 'PAID',
-                        paidAt: {
-                            gte: start,
-                            lte: end,
-                        },
+                        paidAt: { gte: start, lte: end },
                     },
                     _sum: { total: true },
                 }),
@@ -131,7 +152,8 @@ export class ReportService {
 
             result.push({
                 date: format(date, 'dd/MM'),
-                revenue: revenue._sum.total || 0,
+                revenue: revenue._sum.totalAmount || 0,
+                actualRevenue: actualRevenue._sum.total || 0,
                 bookings: bookingCount,
             });
         }
@@ -139,7 +161,14 @@ export class ReportService {
         return result;
     }
 
-    async getMonthlyRevenue(): Promise<{ currentMonth: number; lastMonth: number; growth: number }> {
+    async getMonthlyRevenue(): Promise<{
+        currentMonth: number;
+        lastMonth: number;
+        growth: number;
+        actualCurrentMonth: number;
+        actualLastMonth: number;
+        actualGrowth: number;
+    }> {
         const today = new Date();
         const startCurrent = startOfMonth(today);
         const endCurrent = endOfMonth(today);
@@ -148,37 +177,51 @@ export class ReportService {
         const startLast = startOfMonth(lastMonthDate);
         const endLast = endOfMonth(lastMonthDate);
 
-        const [currentMonthRevenue, lastMonthRevenue] = await Promise.all([
+        const [currentMonthRevenue, lastMonthRevenue, actualCurrentMonthRevenue, actualLastMonthRevenue] = await Promise.all([
+            prisma.booking.aggregate({
+                where: {
+                    date: { gte: startCurrent, lte: endCurrent },
+                    status: { in: [...REVENUE_BOOKING_STATUSES] },
+                },
+                _sum: { totalAmount: true },
+            }),
+            prisma.booking.aggregate({
+                where: {
+                    date: { gte: startLast, lte: endLast },
+                    status: { in: [...REVENUE_BOOKING_STATUSES] },
+                },
+                _sum: { totalAmount: true },
+            }),
             prisma.invoice.aggregate({
                 where: {
                     paymentStatus: 'PAID',
-                    paidAt: {
-                        gte: startCurrent,
-                        lte: endCurrent,
-                    },
+                    paidAt: { gte: startCurrent, lte: endCurrent },
                 },
                 _sum: { total: true },
             }),
             prisma.invoice.aggregate({
                 where: {
                     paymentStatus: 'PAID',
-                    paidAt: {
-                        gte: startLast,
-                        lte: endLast,
-                    },
+                    paidAt: { gte: startLast, lte: endLast },
                 },
                 _sum: { total: true },
             }),
         ]);
 
-        const current = currentMonthRevenue._sum.total || 0;
-        const last = lastMonthRevenue._sum.total || 0;
+        const current = currentMonthRevenue._sum.totalAmount || 0;
+        const last = lastMonthRevenue._sum.totalAmount || 0;
         const growth = last > 0 ? ((current - last) / last) * 100 : 0;
+        const actualCurrent = actualCurrentMonthRevenue._sum.total || 0;
+        const actualLast = actualLastMonthRevenue._sum.total || 0;
+        const actualGrowth = actualLast > 0 ? ((actualCurrent - actualLast) / actualLast) * 100 : 0;
 
         return {
             currentMonth: current,
             lastMonth: last,
             growth: Math.round(growth * 10) / 10,
+            actualCurrentMonth: actualCurrent,
+            actualLastMonth: actualLast,
+            actualGrowth: Math.round(actualGrowth * 10) / 10,
         };
     }
 

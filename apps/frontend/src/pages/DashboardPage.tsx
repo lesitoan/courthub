@@ -16,6 +16,7 @@ import {
     Activity
 } from 'lucide-react';
 import { cn, formatCurrency, formatDate } from '@/lib/utils';
+import { ADMIN_ROUTES } from '@/lib/routes';
 import { reportApi } from '@/services/report.service';
 import { Button } from '@/components/ui/button';
 
@@ -72,30 +73,23 @@ function StatsCard({ title, value, change, icon, trend = 'neutral', loading, onC
 interface ChartDataPoint {
     label: string;
     value: number;
+    actualValue?: number;
     date?: string;
 }
 
 function EnhancedBarChart({
     data,
     title,
-    color = 'primary',
     showValues = true,
     height = 250
 }: {
     data: ChartDataPoint[];
     title?: string;
-    color?: 'primary' | 'success' | 'warning';
     showValues?: boolean;
     height?: number;
 }) {
     const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
-    const maxValue = Math.max(...data.map(d => d.value), 1);
-
-    const colorClasses = {
-        primary: 'from-primary-500 to-primary-400',
-        success: 'from-green-500 to-green-400',
-        warning: 'from-yellow-500 to-yellow-400',
-    };
+    const maxValue = Math.max(...data.map(d => Math.max(d.value, d.actualValue || 0)), 1);
 
     return (
         <div>
@@ -103,6 +97,7 @@ function EnhancedBarChart({
             <div className="flex items-end gap-1 sm:gap-2" style={{ height }}>
                 {data.map((item, i) => {
                     const percentage = (item.value / maxValue) * 100;
+                    const actualPercentage = ((item.actualValue || 0) / maxValue) * 100;
                     const isHovered = hoveredIndex === i;
 
                     return (
@@ -115,7 +110,8 @@ function EnhancedBarChart({
                             {/* Tooltip */}
                             {isHovered && (
                                 <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 bg-foreground text-background px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap z-10 shadow-lg">
-                                    <div className="font-bold">{formatCurrency(item.value)}</div>
+                                    <div className="font-bold">Dự kiến: {formatCurrency(item.value)}</div>
+                                    <div className="opacity-80">Thực nhận: {formatCurrency(item.actualValue || 0)}</div>
                                     {item.date && <div className="opacity-70">{item.date}</div>}
                                     <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-full border-4 border-transparent border-t-foreground" />
                                 </div>
@@ -127,13 +123,14 @@ function EnhancedBarChart({
                                 style={{ height: height - 30 }}
                             >
                                 <div
-                                    className={cn(
-                                        'w-full max-w-[50px] rounded-t-lg transition-all duration-300 bg-gradient-to-t',
-                                        colorClasses[color],
-                                        isHovered && 'opacity-80 scale-105'
-                                    )}
+                                    className={cn('relative w-full max-w-[50px] rounded-t-lg bg-yellow-500/70 transition-all duration-300', isHovered && 'opacity-90 scale-105')}
                                     style={{ height: `${Math.max(percentage, 3)}%` }}
-                                />
+                                >
+                                    <div
+                                        className="absolute bottom-0 left-0 w-full rounded-t-lg bg-primary-500 transition-all duration-300"
+                                        style={{ height: `${Math.min(actualPercentage / Math.max(percentage, 1) * 100, 100)}%` }}
+                                    />
+                                </div>
                             </div>
 
                             {/* Label */}
@@ -147,11 +144,7 @@ function EnhancedBarChart({
                             {/* Value below (optional) */}
                             {showValues && (
                                 <span className="text-xs text-foreground-secondary font-medium">
-                                    {item.value >= 1000000
-                                        ? `${(item.value / 1000000).toFixed(1)}M`
-                                        : item.value >= 1000
-                                            ? `${(item.value / 1000).toFixed(0)}K`
-                                            : item.value}
+                                    {formatCurrency(item.actualValue || 0)}
                                 </span>
                             )}
                         </div>
@@ -358,12 +351,13 @@ export default function DashboardPage() {
 
     // Chart data transformation
     const chartData: ChartDataPoint[] = revenueChart?.map((item) => ({
-        label: periodFilter === 'month'
-            ? item.date.split('-')[2] // Day only
-            : item.date.split('-').slice(1).join('/'), // MM/DD
+        label: item.date,
         value: item.revenue,
+        actualValue: item.actualRevenue,
         date: item.date,
     })) || [];
+    const projectedRevenueTotal = revenueChart?.reduce((sum, d) => sum + d.revenue, 0) || 0;
+    const actualRevenueTotal = revenueChart?.reduce((sum, d) => sum + d.actualRevenue, 0) || 0;
 
     // Booking distribution mock data
     const bookingDistribution = [
@@ -374,33 +368,41 @@ export default function DashboardPage() {
 
     const statsCards = [
         {
-            title: periodFilter === 'day' ? 'Doanh thu hôm nay' : periodFilter === 'week' ? 'Doanh thu tuần' : 'Doanh thu tháng',
-            value: formatCurrency(stats?.todayRevenue || 0),
+            title: periodFilter === 'day' ? 'Dự kiến hôm nay' : periodFilter === 'week' ? 'Dự kiến tuần' : 'Dự kiến tháng',
+            value: formatCurrency(periodFilter === 'day' ? (stats?.todayRevenue || 0) : projectedRevenueTotal),
             change: monthlyRevenue?.growth,
-            icon: <DollarSign className="w-6 h-6 text-primary-500" />,
+            icon: <DollarSign className="w-6 h-6 text-yellow-400" />,
             trend: (monthlyRevenue?.growth || 0) >= 0 ? 'up' as const : 'down' as const,
-            onClick: () => navigate('/reports'),
+            onClick: () => navigate(ADMIN_ROUTES.reports),
+        },
+        {
+            title: periodFilter === 'day' ? 'Thực nhận hôm nay' : periodFilter === 'week' ? 'Thực nhận tuần' : 'Thực nhận tháng',
+            value: formatCurrency(periodFilter === 'day' ? (stats?.actualTodayRevenue || 0) : actualRevenueTotal),
+            change: monthlyRevenue?.actualGrowth,
+            icon: <DollarSign className="w-6 h-6 text-primary-500" />,
+            trend: (monthlyRevenue?.actualGrowth || 0) >= 0 ? 'up' as const : 'down' as const,
+            onClick: () => navigate(ADMIN_ROUTES.invoices),
         },
         {
             title: 'Lượt đặt sân',
             value: String(stats?.todayBookings || 0),
             icon: <Calendar className="w-6 h-6 text-primary-500" />,
             trend: 'neutral' as const,
-            onClick: () => navigate('/calendar'),
+            onClick: () => navigate(ADMIN_ROUTES.calendar),
         },
         {
             title: 'Khách hàng hoạt động',
             value: String(stats?.activeCustomers || 0),
             icon: <Users className="w-6 h-6 text-primary-500" />,
             trend: 'neutral' as const,
-            onClick: () => navigate('/customers'),
+            onClick: () => navigate(ADMIN_ROUTES.customers),
         },
         {
             title: 'Sân trống / Đang chơi',
             value: `${stats?.courtsAvailable || 0} / ${stats?.courtsInUse || 0}`,
             icon: <Grid3X3 className="w-6 h-6 text-primary-500" />,
             trend: 'neutral' as const,
-            onClick: () => navigate('/courts'),
+            onClick: () => navigate(ADMIN_ROUTES.courts),
         },
     ];
 
@@ -424,7 +426,7 @@ export default function DashboardPage() {
                     <PeriodFilterTabs value={periodFilter} onChange={setPeriodFilter} />
                     {stats?.pendingInvoices && stats.pendingInvoices > 0 && (
                         <button
-                            onClick={() => navigate('/invoices')}
+                            onClick={() => navigate(ADMIN_ROUTES.invoices)}
                             className="hidden sm:flex items-center gap-2 px-4 py-2 bg-yellow-500/20 text-yellow-400 rounded-lg hover:bg-yellow-500/30 transition-colors"
                         >
                             <FileText className="w-4 h-4" />
@@ -435,7 +437,7 @@ export default function DashboardPage() {
             </div>
 
             {/* Stats Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-4">
                 {statsCards.map((stat, i) => (
                     <StatsCard key={i} {...stat} loading={loadingStats} />
                 ))}
@@ -451,8 +453,12 @@ export default function DashboardPage() {
                             <h2 className="font-semibold text-foreground">{chartTitle}</h2>
                         </div>
                         <div className="text-sm text-foreground-secondary">
-                            Tổng: <span className="font-semibold text-foreground">
+                            Dự kiến: <span className="font-semibold text-yellow-400">
                                 {formatCurrency(revenueChart?.reduce((sum, d) => sum + d.revenue, 0) || 0)}
+                            </span>
+                            <span className="mx-2">•</span>
+                            Thực nhận: <span className="font-semibold text-primary-500">
+                                {formatCurrency(revenueChart?.reduce((sum, d) => sum + d.actualRevenue, 0) || 0)}
                             </span>
                         </div>
                     </div>
@@ -460,7 +466,6 @@ export default function DashboardPage() {
                     {chartData.length > 0 ? (
                         <EnhancedBarChart
                             data={chartData}
-                            color="primary"
                             showValues={periodFilter !== 'month'}
                             height={periodFilter === 'month' ? 200 : 250}
                         />
@@ -493,7 +498,7 @@ export default function DashboardPage() {
                             <Clock className="w-5 h-5 text-primary-500" />
                             <h2 className="font-semibold text-foreground">Lịch đặt sân sắp tới</h2>
                         </div>
-                        <Button variant="ghost" size="sm" onClick={() => navigate('/calendar')}>
+                        <Button variant="ghost" size="sm" onClick={() => navigate(ADMIN_ROUTES.calendar)}>
                             Xem tất cả
                             <ChevronRight className="w-4 h-4 ml-1" />
                         </Button>
@@ -514,7 +519,7 @@ export default function DashboardPage() {
                                     time={`${booking.startTime} - ${booking.endTime}`}
                                     date={formatDate(booking.date)}
                                     status={booking.status}
-                                    onClick={() => navigate(`/calendar?booking=${booking.id}`)}
+                                    onClick={() => navigate(`${ADMIN_ROUTES.calendar}?booking=${booking.id}`)}
                                 />
                             ))}
                         </div>
@@ -534,7 +539,7 @@ export default function DashboardPage() {
                     </div>
                     <div className="grid grid-cols-2 gap-3">
                         <button
-                            onClick={() => navigate('/calendar')}
+                            onClick={() => navigate(ADMIN_ROUTES.calendar)}
                             className="flex flex-col items-center gap-2 p-4 rounded-xl bg-background-tertiary hover:bg-primary-500/10 hover:text-primary-500 transition-all group"
                         >
                             <div className="w-12 h-12 rounded-xl bg-primary-500/10 group-hover:bg-primary-500/20 flex items-center justify-center transition-colors">
@@ -543,7 +548,7 @@ export default function DashboardPage() {
                             <span className="text-sm font-medium">Đặt sân mới</span>
                         </button>
                         <button
-                            onClick={() => navigate('/customers')}
+                            onClick={() => navigate(ADMIN_ROUTES.customers)}
                             className="flex flex-col items-center gap-2 p-4 rounded-xl bg-background-tertiary hover:bg-primary-500/10 hover:text-primary-500 transition-all group"
                         >
                             <div className="w-12 h-12 rounded-xl bg-green-500/10 group-hover:bg-green-500/20 flex items-center justify-center transition-colors">
@@ -552,7 +557,7 @@ export default function DashboardPage() {
                             <span className="text-sm font-medium">Thêm khách hàng</span>
                         </button>
                         <button
-                            onClick={() => navigate('/calendar')}
+                            onClick={() => navigate(ADMIN_ROUTES.calendar)}
                             className="flex flex-col items-center gap-2 p-4 rounded-xl bg-background-tertiary hover:bg-primary-500/10 hover:text-primary-500 transition-all group"
                         >
                             <div className="w-12 h-12 rounded-xl bg-yellow-500/10 group-hover:bg-yellow-500/20 flex items-center justify-center transition-colors">
@@ -561,7 +566,7 @@ export default function DashboardPage() {
                             <span className="text-sm font-medium">Check-in</span>
                         </button>
                         <button
-                            onClick={() => navigate('/invoices')}
+                            onClick={() => navigate(ADMIN_ROUTES.invoices)}
                             className="flex flex-col items-center gap-2 p-4 rounded-xl bg-background-tertiary hover:bg-primary-500/10 hover:text-primary-500 transition-all group"
                         >
                             <div className="w-12 h-12 rounded-xl bg-purple-500/10 group-hover:bg-purple-500/20 flex items-center justify-center transition-colors">
@@ -575,3 +580,4 @@ export default function DashboardPage() {
         </div>
     );
 }
+

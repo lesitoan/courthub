@@ -16,6 +16,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { cn, formatCurrency, formatDate } from '@/lib/utils';
 import { Booking } from '@/services/booking.service';
+import { parseBookingOnlineMeta, isOnlineBooking } from '@/lib/booking-meta';
 
 interface BookingDetailPanelProps {
     booking: Booking | null;
@@ -24,6 +25,7 @@ interface BookingDetailPanelProps {
     onCheckIn: (id: string) => void;
     onCheckOut: (id: string) => void;
     onCancel: (id: string) => void;
+    onConfirm?: (id: string) => void;
     onEdit?: (booking: Booking) => void;
     isLoading?: boolean;
 }
@@ -52,6 +54,7 @@ export function BookingDetailPanel({
     onCheckIn,
     onCheckOut,
     onCancel,
+    onConfirm,
     onEdit,
     isLoading = false,
 }: BookingDetailPanelProps) {
@@ -60,10 +63,13 @@ export function BookingDetailPanel({
     const statusConfig = getStatusConfig(booking.status);
     const StatusIcon = statusConfig.icon;
 
-    const canCheckIn = booking.status === 'CONFIRMED' || booking.status === 'PENDING';
+    const canConfirm = booking.status === 'PENDING';
+    const canCheckIn = booking.status === 'CONFIRMED';
     const canCheckOut = booking.status === 'IN_PROGRESS';
     const canCancel = booking.status !== 'CANCELLED' && booking.status !== 'COMPLETED';
     const canEdit = booking.status !== 'CANCELLED' && booking.status !== 'COMPLETED' && booking.status !== 'IN_PROGRESS';
+    const onlineMeta = parseBookingOnlineMeta(booking.notes);
+    const isOnline = isOnlineBooking(booking.notes);
 
     return (
         <>
@@ -103,6 +109,13 @@ export function BookingDetailPanel({
                         <StatusIcon className="w-4 h-4" />
                         <span className="font-medium">{statusConfig.label}</span>
                     </div>
+
+                    {isOnline && (
+                        <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-primary-500/20 text-primary-500 w-fit">
+                            <AlertCircle className="w-4 h-4" />
+                            <span className="text-sm font-medium">Khách đặt online</span>
+                        </div>
+                    )}
 
                     {/* Recurring badge */}
                     {booking.isRecurring && (
@@ -198,14 +211,35 @@ export function BookingDetailPanel({
                         </div>
                     </div>
 
+                    {onlineMeta.addons.length > 0 && (
+                        <div>
+                            <h3 className="text-sm font-medium text-foreground-secondary mb-2">
+                                Dịch vụ & sản phẩm đặt kèm
+                            </h3>
+                            <div className="bg-background-tertiary rounded-lg divide-y divide-border">
+                                {onlineMeta.addons.map((addon) => (
+                                    <div key={`${addon.type}:${addon.id}`} className="flex items-center justify-between gap-3 p-3">
+                                        <div>
+                                            <p className="font-medium text-foreground">{addon.name}</p>
+                                            <p className="text-xs text-foreground-secondary">
+                                                {addon.type === 'product' ? 'Sản phẩm' : 'Dịch vụ'} · {addon.quantity} {addon.unit}
+                                            </p>
+                                        </div>
+                                        <span className="font-semibold text-primary-500">{formatCurrency(addon.total)}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
                     {/* Notes */}
-                    {booking.notes && (
+                    {onlineMeta.publicNotes && (
                         <div>
                             <h3 className="text-sm font-medium text-foreground-secondary mb-2">
                                 Ghi chú
                             </h3>
                             <p className="text-sm text-foreground bg-background-tertiary rounded-lg p-3">
-                                {booking.notes}
+                                {onlineMeta.publicNotes}
                             </p>
                         </div>
                     )}
@@ -243,6 +277,17 @@ export function BookingDetailPanel({
 
                     {/* Actions */}
                     <div className="space-y-2 pt-4 border-t border-border">
+                        {canConfirm && onConfirm && (
+                            <Button
+                                className="w-full"
+                                onClick={() => onConfirm(booking.id)}
+                                isLoading={isLoading}
+                            >
+                                <CheckCircle className="w-4 h-4 mr-2" />
+                                Xác nhận đặt sân
+                            </Button>
+                        )}
+
                         {canCheckIn && (
                             <Button
                                 className="w-full"

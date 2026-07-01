@@ -13,6 +13,7 @@ import {
     Home
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { ADMIN_ROUTES } from '@/lib/routes';
 
 interface SearchResult {
     id: string;
@@ -32,14 +33,14 @@ interface CommandPaletteProps {
 
 // Default navigation items
 const DEFAULT_ITEMS: SearchResult[] = [
-    { id: 'home', type: 'page', title: 'Trang chủ', icon: Home, path: '/' },
-    { id: 'calendar', type: 'page', title: 'Lịch đặt sân', icon: Calendar, path: '/calendar' },
-    { id: 'customers', type: 'page', title: 'Khách hàng', icon: Users, path: '/customers' },
-    { id: 'invoices', type: 'page', title: 'Hóa đơn', icon: Receipt, path: '/invoices' },
-    { id: 'inventory', type: 'page', title: 'Kho hàng', icon: Package, path: '/inventory' },
-    { id: 'reports', type: 'page', title: 'Báo cáo', icon: BarChart3, path: '/reports' },
-    { id: 'courts', type: 'page', title: 'Quản lý sân', icon: FileText, path: '/courts' },
-    { id: 'settings', type: 'page', title: 'Cài đặt', icon: Settings, path: '/settings' },
+    { id: 'home', type: 'page', title: 'Trang chủ', icon: Home, path: ADMIN_ROUTES.dashboard },
+    { id: 'calendar', type: 'page', title: 'Lịch đặt sân', icon: Calendar, path: ADMIN_ROUTES.calendar },
+    { id: 'customers', type: 'page', title: 'Khách hàng', icon: Users, path: ADMIN_ROUTES.customers },
+    { id: 'invoices', type: 'page', title: 'Hóa đơn', icon: Receipt, path: ADMIN_ROUTES.invoices },
+    { id: 'inventory', type: 'page', title: 'Kho hàng', icon: Package, path: ADMIN_ROUTES.inventory },
+    { id: 'reports', type: 'page', title: 'Báo cáo', icon: BarChart3, path: ADMIN_ROUTES.reports },
+    { id: 'courts', type: 'page', title: 'Quản lý sân', icon: FileText, path: ADMIN_ROUTES.courts },
+    { id: 'settings', type: 'page', title: 'Cài đặt', icon: Settings, path: ADMIN_ROUTES.settings },
 ];
 
 export function CommandPalette({ isOpen, onClose, onSearch }: CommandPaletteProps) {
@@ -246,3 +247,4 @@ export function useCommandPalette() {
         toggle: () => setIsOpen(prev => !prev),
     };
 }
+

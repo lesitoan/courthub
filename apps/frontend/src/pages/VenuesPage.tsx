@@ -318,7 +318,7 @@ export default function VenuesPage() {
                                     <Input
                                         value={formData.name}
                                         onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                        placeholder="VD: Courtify Phú Nhuận"
+                                        placeholder="VD: CourtHub Phú Nhuận"
                                         required
                                     />
                                 </div>

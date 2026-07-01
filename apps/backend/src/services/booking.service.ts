@@ -1,5 +1,6 @@
 import prisma from '../config/database.js';
 import { AppError } from '../middleware/error.js';
+import { invoiceService } from './invoice.service.js';
 
 export interface CreateBookingInput {
     courtId: string;
@@ -30,6 +31,39 @@ export interface BookingQueryParams {
     limit?: number;
 }
 
+function getBookingStart(date: Date, startTime: string) {
+    const [hours, minutes] = startTime.split(':').map(Number);
+    const result = new Date(date);
+    result.setHours(hours, minutes || 0, 0, 0);
+    return result;
+}
+
+function startOfLocalDay(date: Date) {
+    const result = new Date(date);
+    result.setHours(0, 0, 0, 0);
+    return result;
+}
+
+function timeToMinutes(time: string) {
+    const [hours, minutes] = time.split(':').map(Number);
+    return hours * 60 + (minutes || 0);
+}
+
+function isStaffBookableStart(date: Date, startTime: string) {
+    const now = new Date();
+    const bookingDay = startOfLocalDay(date).getTime();
+    const today = startOfLocalDay(now).getTime();
+
+    if (bookingDay < today) return false;
+    if (bookingDay > today) return true;
+
+    const minHour = now.getMinutes() < 30 ? now.getHours() : now.getHours() + 1;
+    const minStart = new Date(date);
+    minStart.setHours(minHour, 0, 0, 0);
+
+    return getBookingStart(date, startTime).getTime() >= minStart.getTime();
+}
+
 export class BookingService {
     // Check if time slot is available
     async checkAvailability(
@@ -39,6 +73,10 @@ export class BookingService {
         endTime: string,
         excludeBookingId?: string
     ): Promise<{ available: boolean; conflicts: any[] }> {
+        if (timeToMinutes(startTime) >= timeToMinutes(endTime)) {
+            throw new AppError(400, 'Giờ kết thúc phải sau giờ bắt đầu');
+        }
+
         const startOfDay = new Date(date);
         startOfDay.setHours(0, 0, 0, 0);
         const endOfDay = new Date(date);
@@ -271,6 +309,10 @@ export class BookingService {
             throw new AppError(400, 'Sân hiện không hoạt động');
         }
 
+        if (!isStaffBookableStart(input.date, input.startTime)) {
+            throw new AppError(400, 'Không thể đặt khung giờ đã qua');
+        }
+
         // Check availability
         const { available, conflicts } = await this.checkAvailability(
             input.courtId,
@@ -284,12 +326,12 @@ export class BookingService {
         }
 
         // Validate time within venue hours
-        const [venueOpenH] = court.venue.openTime.split(':').map(Number);
-        const [venueCloseH] = court.venue.closeTime.split(':').map(Number);
-        const [startH] = input.startTime.split(':').map(Number);
-        const [endH] = input.endTime.split(':').map(Number);
+        const venueOpen = timeToMinutes(court.venue.openTime);
+        const venueClose = timeToMinutes(court.venue.closeTime);
+        const start = timeToMinutes(input.startTime);
+        const end = timeToMinutes(input.endTime);
 
-        if (startH < venueOpenH || endH > venueCloseH) {
+        if (start < venueOpen || end > venueClose) {
             throw new AppError(400, `Sân mở cửa từ ${court.venue.openTime} đến ${court.venue.closeTime}`);
         }
 
@@ -406,6 +448,12 @@ export class BookingService {
             throw new AppError(400, 'Chỉ có thể check-in lịch đã xác nhận');
         }
 
+
+        const checkInWindowStart = getBookingStart(existing.date, existing.startTime);
+        checkInWindowStart.setMinutes(checkInWindowStart.getMinutes() - 15);
+        if (new Date().getTime() < checkInWindowStart.getTime()) {
+            throw new AppError(400, 'Chi co the check-in truoc gio choi toi da 15 phut');
+        }
         const booking = await prisma.booking.update({
             where: { id },
             data: {
@@ -418,7 +466,10 @@ export class BookingService {
     }
 
     async checkOut(id: string) {
-        const existing = await prisma.booking.findUnique({ where: { id } });
+        const existing = await prisma.booking.findUnique({
+            where: { id },
+            include: { invoiceItem: true },
+        });
         if (!existing) {
             throw new AppError(404, 'Không tìm thấy lịch đặt sân');
         }
@@ -435,11 +486,11 @@ export class BookingService {
             },
         });
 
-        // Update customer total spent
-        if (existing.customerId) {
-            await prisma.customer.update({
-                where: { id: existing.customerId },
-                data: { totalSpent: { increment: existing.totalAmount } },
+        if (!existing.invoiceItem) {
+            await invoiceService.create({
+                customerId: existing.customerId || undefined,
+                bookingIds: [existing.id],
+                notes: 'Tự động tạo khi check-out lịch đặt sân',
             });
         }
 

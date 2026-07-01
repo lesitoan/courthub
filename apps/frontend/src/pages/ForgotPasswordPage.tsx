@@ -4,6 +4,7 @@ import { ArrowLeft, Mail, CheckCircle, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
+import { ADMIN_ROUTES } from '@/lib/routes';
 
 type Step = 'email' | 'sent' | 'error';
 
@@ -45,7 +46,7 @@ export default function ForgotPasswordPage() {
             <div className="w-full max-w-md">
                 {/* Back Link */}
                 <Link
-                    to="/login"
+                    to={ADMIN_ROUTES.login}
                     className="inline-flex items-center gap-2 text-foreground-secondary hover:text-foreground mb-8 transition-colors"
                 >
                     <ArrowLeft className="w-4 h-4" />
@@ -126,7 +127,7 @@ export default function ForgotPasswordPage() {
                                 >
                                     Gửi lại email
                                 </Button>
-                                <Link to="/login">
+                                <Link to={ADMIN_ROUTES.login}>
                                     <Button variant="ghost" className="w-full">
                                         Quay lại đăng nhập
                                     </Button>
@@ -164,3 +165,4 @@ export default function ForgotPasswordPage() {
         </div>
     );
 }
+

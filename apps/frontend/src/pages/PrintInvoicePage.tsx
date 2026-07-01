@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { invoiceApi } from '@/services/invoice.service';
 import { formatCurrency, formatDate } from '@/lib/utils';
+import { ADMIN_ROUTES } from '@/lib/routes';
 
 export default function PrintInvoicePage() {
     const { id } = useParams<{ id: string }>();
@@ -37,7 +38,7 @@ export default function PrintInvoicePage() {
         return (
             <div className="flex flex-col items-center justify-center h-screen gap-4">
                 <p className="text-red-500">Không tìm thấy hóa đơn</p>
-                <button onClick={() => navigate('/invoices')} className="text-primary-500 hover:underline">
+                <button onClick={() => navigate(ADMIN_ROUTES.invoices)} className="text-primary-500 hover:underline">
                     Quay lại
                 </button>
             </div>
@@ -70,7 +71,7 @@ export default function PrintInvoicePage() {
             {/* Back button - hidden when printing */}
             <div className="no-print fixed top-4 left-4 z-50">
                 <button
-                    onClick={() => navigate('/invoices')}
+                    onClick={() => navigate(ADMIN_ROUTES.invoices)}
                     className="flex items-center gap-2 px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-700"
                 >
                     ← Quay lại
@@ -82,12 +83,12 @@ export default function PrintInvoicePage() {
                 {/* Header */}
                 <div className="flex items-start justify-between border-b-2 border-gray-200 pb-6 mb-6">
                     <div>
-                        <h1 className="text-3xl font-bold text-primary-600">COURTIFY</h1>
+                        <h1 className="text-3xl font-bold text-primary-600">COURTHUB</h1>
                         <p className="text-gray-600 mt-1">Hệ thống quản lý sân cầu lông</p>
                         <div className="mt-2 text-sm text-gray-500">
                             <p>123 Phan Xích Long, Phú Nhuận, TP.HCM</p>
                             <p>Hotline: 028 1234 5678</p>
-                            <p>Email: info@courtify.vn</p>
+                            <p>Email: info@courthub.vn</p>
                         </div>
                     </div>
                     <div className="text-right">
@@ -209,10 +210,11 @@ export default function PrintInvoicePage() {
 
                 {/* Footer */}
                 <div className="mt-10 pt-6 border-t border-gray-200 text-center text-sm text-gray-500">
-                    <p>Cảm ơn quý khách đã sử dụng dịch vụ của Courtify!</p>
-                    <p className="mt-1">Mọi thắc mắc xin liên hệ: 028 1234 5678 | info@courtify.vn</p>
+                    <p>Cảm ơn quý khách đã sử dụng dịch vụ của CourtHub!</p>
+                    <p className="mt-1">Mọi thắc mắc xin liên hệ: 028 1234 5678 | info@courthub.vn</p>
                 </div>
             </div>
         </>
     );
 }
+

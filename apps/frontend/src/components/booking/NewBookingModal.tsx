@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
-import { X, Calendar, Clock, User, FileText, AlertCircle, Check, Loader2 } from 'lucide-react';
+import { X, Calendar, Clock, User, FileText, AlertCircle, Check, Loader2, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
-import { bookingApi, CreateBookingInput, PricingResult } from '@/services/booking.service';
+import { cn, formatDateInput } from '@/lib/utils';
+import { bookingApi, Booking, CreateBookingInput, PricingResult } from '@/services/booking.service';
 import { customerApi, Customer } from '@/services/customer.service';
 import { Court } from '@/services/booking.service';
 
@@ -13,14 +13,63 @@ interface NewBookingModalProps {
     selectedDate?: Date;
     selectedCourtId?: string;
     selectedTime?: string;
+    selectedEndTime?: string;
+    existingBookings?: Booking[];
     onSuccess: () => void;
 }
 
-const TIME_OPTIONS = Array.from({ length: 34 }, (_, i) => {
-    const hour = Math.floor(i / 2) + 6;
-    const minute = (i % 2) * 30;
-    return `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+const START_TIME_OPTIONS = Array.from({ length: 17 }, (_, i) => {
+    const hour = i + 6;
+    return `${hour.toString().padStart(2, '0')}:00`;
 });
+
+const END_TIME_OPTIONS = Array.from({ length: 17 }, (_, i) => {
+    const hour = i + 7;
+    return `${hour.toString().padStart(2, '0')}:00`;
+});
+
+function isTodayDateInput(date: string) {
+    return date === formatDateInput(new Date());
+}
+
+function getStaffMinimumStartTime(date: string) {
+    if (!isTodayDateInput(date)) return '00:00';
+
+    const now = new Date();
+    const minHour = now.getMinutes() < 30 ? now.getHours() : now.getHours() + 1;
+    return `${String(minHour).padStart(2, '0')}:00`;
+}
+
+function isStartTimeDisabled(date: string, time: string) {
+    return time < getStaffMinimumStartTime(date);
+}
+
+function getDefaultStartTime(date: string, selectedTime?: string) {
+    const fallback = selectedTime || '08:00';
+    if (!isStartTimeDisabled(date, fallback)) return fallback;
+    return START_TIME_OPTIONS.find(time => !isStartTimeDisabled(date, time)) || START_TIME_OPTIONS[START_TIME_OPTIONS.length - 1];
+}
+
+function addOneHour(time: string) {
+    const [hour, minute] = time.split(':').map(Number);
+    return `${String(hour + 1).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
+}
+
+function getDefaultEndTime(startTime: string, selectedEndTime?: string) {
+    if (selectedEndTime && selectedEndTime > startTime) return selectedEndTime;
+    const fallback = addOneHour(startTime);
+    if (END_TIME_OPTIONS.includes(fallback)) return fallback;
+    return END_TIME_OPTIONS[END_TIME_OPTIONS.length - 1];
+}
+
+function toMinutes(time: string) {
+    const [hour, minute] = time.split(':').map(Number);
+    return hour * 60 + minute;
+}
+
+function isBlockingStatus(status: Booking['status']) {
+    return ['PENDING', 'CONFIRMED', 'IN_PROGRESS'].includes(status);
+}
 
 export function NewBookingModal({
     isOpen,
@@ -29,16 +78,19 @@ export function NewBookingModal({
     selectedDate,
     selectedCourtId = '',
     selectedTime = '',
+    selectedEndTime = '',
+    existingBookings = [],
     onSuccess,
 }: NewBookingModalProps) {
+    const initialDate = selectedDate ? formatDateInput(selectedDate) : formatDateInput(new Date());
+    const initialStartTime = getDefaultStartTime(initialDate, selectedTime);
+    const initialEndTime = getDefaultEndTime(initialStartTime, selectedEndTime);
     const [formData, setFormData] = useState({
         courtId: selectedCourtId,
         customerId: '',
-        date: selectedDate ? selectedDate.toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
-        startTime: selectedTime || '08:00',
-        endTime: selectedTime ?
-            `${String(parseInt(selectedTime.split(':')[0]) + 1).padStart(2, '0')}:${selectedTime.split(':')[1]}`
-            : '09:00',
+        date: initialDate,
+        startTime: initialStartTime,
+        endTime: initialEndTime,
         notes: '',
     });
 
@@ -46,6 +98,7 @@ export function NewBookingModal({
     const [customerSearch, setCustomerSearch] = useState('');
     const [showCustomerDropdown, setShowCustomerDropdown] = useState(false);
     const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
+    const [openTimeDropdown, setOpenTimeDropdown] = useState<'start' | 'end' | null>(null);
 
     const [pricing, setPricing] = useState<PricingResult | null>(null);
     const [isLoadingPrice, setIsLoadingPrice] = useState(false);
@@ -58,23 +111,24 @@ export function NewBookingModal({
     // Reset form when modal opens
     useEffect(() => {
         if (isOpen) {
+            const nextDate = selectedDate ? formatDateInput(selectedDate) : formatDateInput(new Date());
+            const nextStartTime = getDefaultStartTime(nextDate, selectedTime);
             setFormData({
                 courtId: selectedCourtId || courts[0]?.id || '',
                 customerId: '',
-                date: selectedDate ? selectedDate.toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
-                startTime: selectedTime || '08:00',
-                endTime: selectedTime ?
-                    `${String(parseInt(selectedTime.split(':')[0]) + 1).padStart(2, '0')}:${selectedTime.split(':')[1]}`
-                    : '09:00',
+                date: nextDate,
+                startTime: nextStartTime,
+                endTime: getDefaultEndTime(nextStartTime, selectedEndTime),
                 notes: '',
             });
             setSelectedCustomer(null);
             setCustomerSearch('');
+            setOpenTimeDropdown(null);
             setPricing(null);
             setAvailability(null);
             setErrors({});
         }
-    }, [isOpen, selectedCourtId, selectedDate, selectedTime, courts]);
+    }, [isOpen, selectedCourtId, selectedDate, selectedTime, selectedEndTime, courts]);
 
     // Load customers
     useEffect(() => {
@@ -121,6 +175,60 @@ export function NewBookingModal({
         c.phone.includes(customerSearch)
     );
 
+    const blockingBookings = existingBookings.filter((booking) => {
+        return (
+            booking.courtId === formData.courtId &&
+            formatDateInput(new Date(booking.date)) === formData.date &&
+            isBlockingStatus(booking.status)
+        );
+    });
+
+    const isStartOverlappingBooking = (time: string) => {
+        const start = toMinutes(time);
+        return blockingBookings.some((booking) => {
+            const bookingStart = toMinutes(booking.startTime);
+            const bookingEnd = toMinutes(booking.endTime);
+            return start >= bookingStart && start < bookingEnd;
+        });
+    };
+
+    const isEndTimeOverlappingBooking = (time: string) => {
+        const start = toMinutes(formData.startTime);
+        const end = toMinutes(time);
+        return blockingBookings.some((booking) => {
+            const bookingStart = toMinutes(booking.startTime);
+            const bookingEnd = toMinutes(booking.endTime);
+            return start < bookingEnd && end > bookingStart;
+        });
+    };
+
+    const getEndTimeDisabledReason = (time: string) => {
+        if (time <= formData.startTime) return 'trước giờ bắt đầu';
+        if (isEndTimeOverlappingBooking(time)) return 'vướng lịch';
+        return '';
+    };
+
+    const selectStartTime = (nextStartTime: string) => {
+        setFormData(prev => ({
+            ...prev,
+            startTime: nextStartTime,
+            endTime: prev.endTime <= nextStartTime ? getDefaultEndTime(nextStartTime) : prev.endTime,
+        }));
+        setOpenTimeDropdown(null);
+    };
+
+    const selectEndTime = (nextEndTime: string) => {
+        setFormData(prev => ({ ...prev, endTime: nextEndTime }));
+        setOpenTimeDropdown(null);
+    };
+
+    const conflictInSelectedRange = blockingBookings.find((booking) => {
+        const start = toMinutes(formData.startTime);
+        const end = toMinutes(formData.endTime);
+        return start < toMinutes(booking.endTime) && end > toMinutes(booking.startTime);
+    });
+    const hasSelectedRangeConflict = !!conflictInSelectedRange || !!(availability && !availability.available);
+
     const validate = (): boolean => {
         const newErrors: Record<string, string> = {};
 
@@ -128,9 +236,20 @@ export function NewBookingModal({
         if (!formData.date) newErrors.date = 'Vui lòng chọn ngày';
         if (!formData.startTime) newErrors.startTime = 'Vui lòng chọn giờ bắt đầu';
         if (!formData.endTime) newErrors.endTime = 'Vui lòng chọn giờ kết thúc';
+        if (isStartTimeDisabled(formData.date, formData.startTime)) {
+            newErrors.startTime = `Chỉ có thể đặt từ ${getStaffMinimumStartTime(formData.date)} trở đi`;
+        }
 
         if (formData.startTime >= formData.endTime) {
             newErrors.endTime = 'Giờ kết thúc phải sau giờ bắt đầu';
+        }
+
+        if (isStartOverlappingBooking(formData.startTime)) {
+            newErrors.startTime = 'Giờ bắt đầu đang nằm trong một lịch đã đặt';
+        }
+
+        if (conflictInSelectedRange) {
+            newErrors.availability = `Khung giờ này bị trùng với lịch ${conflictInSelectedRange.startTime}-${conflictInSelectedRange.endTime}`;
         }
 
         if (availability && !availability.available) {
@@ -235,7 +354,16 @@ export function NewBookingModal({
                         <input
                             type="date"
                             value={formData.date}
-                            onChange={(e) => setFormData(prev => ({ ...prev, date: e.target.value }))}
+                            onChange={(e) => {
+                                const nextDate = e.target.value;
+                                const nextStartTime = getDefaultStartTime(nextDate, formData.startTime);
+                                setFormData(prev => ({
+                                    ...prev,
+                                    date: nextDate,
+                                    startTime: nextStartTime,
+                                    endTime: prev.endTime <= nextStartTime ? getDefaultEndTime(nextStartTime) : prev.endTime,
+                                }));
+                            }}
                             className={cn(
                                 "w-full bg-background-tertiary border rounded-lg px-3 py-2.5 text-foreground",
                                 "focus:outline-none focus:ring-2 focus:ring-primary-500",
@@ -249,76 +377,131 @@ export function NewBookingModal({
 
                     {/* Time Selection */}
                     <div className="grid grid-cols-2 gap-4">
-                        <div>
+                        <div className="relative">
                             <label className="flex items-center gap-2 text-sm font-medium text-foreground mb-2">
                                 <Clock className="w-4 h-4 text-primary-500" />
-                                Giờ bắt đầu *
+                                Gio bat dau *
                             </label>
-                            <select
-                                value={formData.startTime}
-                                onChange={(e) => setFormData(prev => ({ ...prev, startTime: e.target.value }))}
+                            <button
+                                type="button"
+                                onClick={() => setOpenTimeDropdown(openTimeDropdown === 'start' ? null : 'start')}
                                 className={cn(
-                                    "w-full bg-background-tertiary border rounded-lg px-3 py-2.5 text-foreground",
-                                    "focus:outline-none focus:ring-2 focus:ring-primary-500",
+                                    "flex w-full items-center justify-between bg-background-tertiary border rounded-lg px-3 py-2.5 text-left text-foreground",
+                                    "focus:outline-none focus:ring-2 focus:ring-primary-500 transition-colors",
                                     errors.startTime ? 'border-red-500' : 'border-border'
                                 )}
                             >
-                                {TIME_OPTIONS.map(time => (
-                                    <option key={time} value={time}>{time}</option>
-                                ))}
-                            </select>
+                                <span>{formData.startTime}</span>
+                                <ChevronDown className={cn('h-4 w-4 text-foreground-secondary transition-transform', openTimeDropdown === 'start' && 'rotate-180')} />
+                            </button>
+                            {openTimeDropdown === 'start' && (
+                                <div className="absolute left-0 right-0 top-[74px] z-[70] max-h-56 overflow-y-auto rounded-lg border border-border bg-background-tertiary p-1 shadow-2xl">
+                                    {START_TIME_OPTIONS.map(time => {
+                                        const disabledReason = isStartTimeDisabled(formData.date, time)
+                                            ? 'da qua'
+                                            : isStartOverlappingBooking(time)
+                                                ? 'da dat'
+                                                : '';
+
+                                        return (
+                                            <button
+                                                key={time}
+                                                type="button"
+                                                disabled={!!disabledReason}
+                                                onClick={() => selectStartTime(time)}
+                                                className={cn(
+                                                    'flex w-full items-center justify-between rounded-md px-3 py-2 text-sm transition-colors',
+                                                    formData.startTime === time && 'bg-primary-500 text-white',
+                                                    formData.startTime !== time && !disabledReason && 'text-foreground hover:bg-background-hover',
+                                                    disabledReason && 'cursor-not-allowed text-foreground-muted opacity-50'
+                                                )}
+                                            >
+                                                <span>{time}</span>
+                                                {disabledReason && <span className="text-xs">{disabledReason}</span>}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            )}
+                            {errors.startTime && (
+                                <p className="text-red-400 text-sm mt-1">{errors.startTime}</p>
+                            )}
                         </div>
-                        <div>
+                        <div className="relative">
                             <label className="flex items-center gap-2 text-sm font-medium text-foreground mb-2">
                                 <Clock className="w-4 h-4 text-primary-500" />
-                                Giờ kết thúc *
+                                Gio ket thuc *
                             </label>
-                            <select
-                                value={formData.endTime}
-                                onChange={(e) => setFormData(prev => ({ ...prev, endTime: e.target.value }))}
+                            <button
+                                type="button"
+                                onClick={() => setOpenTimeDropdown(openTimeDropdown === 'end' ? null : 'end')}
                                 className={cn(
-                                    "w-full bg-background-tertiary border rounded-lg px-3 py-2.5 text-foreground",
-                                    "focus:outline-none focus:ring-2 focus:ring-primary-500",
+                                    "flex w-full items-center justify-between bg-background-tertiary border rounded-lg px-3 py-2.5 text-left text-foreground",
+                                    "focus:outline-none focus:ring-2 focus:ring-primary-500 transition-colors",
                                     errors.endTime ? 'border-red-500' : 'border-border'
                                 )}
                             >
-                                {TIME_OPTIONS.map(time => (
-                                    <option key={time} value={time}>{time}</option>
-                                ))}
-                            </select>
+                                <span>{formData.endTime}</span>
+                                <ChevronDown className={cn('h-4 w-4 text-foreground-secondary transition-transform', openTimeDropdown === 'end' && 'rotate-180')} />
+                            </button>
+                            {openTimeDropdown === 'end' && (
+                                <div className="absolute left-0 right-0 top-[74px] z-[70] max-h-56 overflow-y-auto rounded-lg border border-border bg-background-tertiary p-1 shadow-2xl">
+                                    {END_TIME_OPTIONS.map(time => {
+                                        const disabledReason = getEndTimeDisabledReason(time);
+
+                                        return (
+                                            <button
+                                                key={time}
+                                                type="button"
+                                                disabled={!!disabledReason}
+                                                onClick={() => selectEndTime(time)}
+                                                className={cn(
+                                                    'flex w-full items-center justify-between rounded-md px-3 py-2 text-sm transition-colors',
+                                                    formData.endTime === time && 'bg-primary-500 text-white',
+                                                    formData.endTime !== time && !disabledReason && 'text-foreground hover:bg-background-hover',
+                                                    disabledReason && 'cursor-not-allowed text-foreground-muted opacity-50'
+                                                )}
+                                            >
+                                                <span>{time}</span>
+                                                {disabledReason && <span className="text-xs">{disabledReason}</span>}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            )}
                             {errors.endTime && (
                                 <p className="text-red-400 text-sm mt-1">{errors.endTime}</p>
                             )}
                         </div>
                     </div>
-
-                    {/* Availability Status */}
                     {formData.courtId && formData.date && (
                         <div className={cn(
                             "p-3 rounded-lg border flex items-center gap-3",
                             loadingAvailability ? 'border-border bg-background-tertiary' :
-                                availability?.available ? 'border-green-500/30 bg-green-500/10' :
-                                    'border-red-500/30 bg-red-500/10'
+                                hasSelectedRangeConflict ? 'border-red-500/30 bg-red-500/10' :
+                                    'border-green-500/30 bg-green-500/10'
                         )}>
                             {loadingAvailability ? (
                                 <>
                                     <Loader2 className="w-5 h-5 text-foreground-secondary animate-spin" />
                                     <span className="text-foreground-secondary text-sm">Đang kiểm tra...</span>
                                 </>
-                            ) : availability?.available ? (
-                                <>
-                                    <Check className="w-5 h-5 text-green-500" />
-                                    <span className="text-green-400 text-sm">Khung giờ trống, có thể đặt</span>
-                                </>
-                            ) : (
+                            ) : hasSelectedRangeConflict ? (
                                 <>
                                     <AlertCircle className="w-5 h-5 text-red-500" />
                                     <span className="text-red-400 text-sm">
                                         Khung giờ đã có người đặt
-                                        {availability && availability.conflicts && availability.conflicts.length > 0 && (
+                                        {conflictInSelectedRange ? (
+                                            <span> ({conflictInSelectedRange.startTime}-{conflictInSelectedRange.endTime})</span>
+                                        ) : availability && availability.conflicts && availability.conflicts.length > 0 && (
                                             <span> ({availability.conflicts.map(c => `${c.startTime}-${c.endTime}`).join(', ')})</span>
                                         )}
                                     </span>
+                                </>
+                            ) : (
+                                <>
+                                    <Check className="w-5 h-5 text-green-500" />
+                                    <span className="text-green-400 text-sm">Khung giờ trống, có thể đặt</span>
                                 </>
                             )}
                         </div>

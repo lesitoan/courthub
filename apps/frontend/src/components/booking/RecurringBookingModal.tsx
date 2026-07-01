@@ -33,10 +33,9 @@ const WEEKDAYS = [
     { value: 6, label: 'T7', fullLabel: 'Thứ 7' },
 ];
 
-const TIME_OPTIONS = Array.from({ length: 34 }, (_, i) => {
-    const hour = Math.floor(i / 2) + 6;
-    const minute = (i % 2) * 30;
-    return `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+const TIME_OPTIONS = Array.from({ length: 18 }, (_, i) => {
+    const hour = i + 6;
+    return `${hour.toString().padStart(2, '0')}:00`;
 });
 
 export function RecurringBookingModal({

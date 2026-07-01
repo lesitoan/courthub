@@ -16,6 +16,7 @@ import {
     Gift
 } from 'lucide-react';
 import { cn, formatCurrency } from '@/lib/utils';
+import { ADMIN_ROUTES } from '@/lib/routes';
 import { Button } from '@/components/ui/button';
 import { customerApi } from '@/services/customer.service';
 import { CustomerBookingHistory } from '@/components/customer';
@@ -54,7 +55,7 @@ export default function CustomerDetailPage() {
         onSuccess: () => {
             toast({ title: 'Đã xóa khách hàng' });
             queryClient.invalidateQueries({ queryKey: ['customers'] });
-            navigate('/customers');
+            navigate(ADMIN_ROUTES.customers);
         },
         onError: () => {
             toast({ title: 'Lỗi khi xóa khách hàng', variant: 'error' });
@@ -78,7 +79,7 @@ export default function CustomerDetailPage() {
                     <h2 className="text-lg font-semibold text-foreground mb-2">
                         Không tìm thấy khách hàng
                     </h2>
-                    <Button onClick={() => navigate('/customers')}>Quay lại</Button>
+                    <Button onClick={() => navigate(ADMIN_ROUTES.customers)}>Quay lại</Button>
                 </div>
             </div>
         );
@@ -97,7 +98,7 @@ export default function CustomerDetailPage() {
             {/* Header */}
             <div className="flex items-center gap-4">
                 <button
-                    onClick={() => navigate('/customers')}
+                    onClick={() => navigate(ADMIN_ROUTES.customers)}
                     className="p-2 rounded-lg hover:bg-background-tertiary transition-colors"
                 >
                     <ArrowLeft className="w-5 h-5 text-foreground-secondary" />
@@ -258,3 +259,4 @@ export default function CustomerDetailPage() {
         </div>
     );
 }
+

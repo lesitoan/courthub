@@ -55,6 +55,10 @@ export interface CreateBookingInput {
     notes?: string;
 }
 
+export interface UpdateBookingInput extends Partial<CreateBookingInput> {
+    status?: Booking['status'];
+}
+
 export interface PricingResult {
     pricePerHour: number;
     duration: number;
@@ -118,7 +122,7 @@ export const bookingApi = {
     },
 
     // Update booking
-    async update(id: string, input: Partial<CreateBookingInput>): Promise<Booking> {
+    async update(id: string, input: UpdateBookingInput): Promise<Booking> {
         const response = await api.put<ApiResponse<Booking>>(`/bookings/${id}`, input);
         return response.data.data!;
     },

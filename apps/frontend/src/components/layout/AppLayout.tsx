@@ -1,4 +1,5 @@
 import { NavLink, useNavigate } from 'react-router-dom'
+import { useIsFetching, useQueryClient } from '@tanstack/react-query'
 import {
     LayoutDashboard,
     Calendar,
@@ -11,7 +12,8 @@ import {
     Search,
     ChevronDown,
     Package,
-    Building2
+    Building2,
+    RefreshCw
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAuthStore } from '@/stores/auth.store'
@@ -19,29 +21,32 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { NotificationDropdown } from './NotificationDropdown'
 import { BottomNav } from './BottomNav'
+import { ADMIN_ROUTES } from '@/lib/routes'
 
 interface AppLayoutProps {
     children: React.ReactNode
 }
 
 const navigation = [
-    { name: 'Dashboard', href: '/', icon: LayoutDashboard },
-    { name: 'Lịch đặt sân', href: '/calendar', icon: Calendar },
-    { name: 'Khách hàng', href: '/customers', icon: Users },
-    { name: 'Quản lý sân', href: '/courts', icon: Grid3X3 },
-    { name: 'Quản lý cơ sở', href: '/venues', icon: Building2 },
-    { name: 'Hóa đơn', href: '/invoices', icon: FileText },
-    { name: 'Kho & Dịch vụ', href: '/inventory', icon: Package },
-    { name: 'Báo cáo', href: '/reports', icon: BarChart3 },
+    { name: 'Tổng quan', href: ADMIN_ROUTES.dashboard, icon: LayoutDashboard },
+    { name: 'Lịch đặt sân', href: ADMIN_ROUTES.calendar, icon: Calendar },
+    { name: 'Khách hàng', href: ADMIN_ROUTES.customers, icon: Users },
+    { name: 'Quản lý sân', href: ADMIN_ROUTES.courts, icon: Grid3X3 },
+    { name: 'Quản lý cơ sở', href: ADMIN_ROUTES.venues, icon: Building2 },
+    { name: 'Hóa đơn', href: ADMIN_ROUTES.invoices, icon: FileText },
+    { name: 'Kho & Dịch vụ', href: ADMIN_ROUTES.inventory, icon: Package },
+    { name: 'Báo cáo', href: ADMIN_ROUTES.reports, icon: BarChart3 },
 ]
 
 export function AppLayout({ children }: AppLayoutProps) {
     const { user, logout } = useAuthStore()
     const navigate = useNavigate()
+    const queryClient = useQueryClient()
+    const isFetching = useIsFetching()
 
     const handleLogout = () => {
         logout()
-        navigate('/login')
+        navigate(ADMIN_ROUTES.login)
     }
 
     return (
@@ -50,10 +55,8 @@ export function AppLayout({ children }: AppLayoutProps) {
             <aside className="hidden md:flex w-64 bg-background-secondary border-r border-border flex-col">
                 {/* Logo */}
                 <div className="h-16 flex items-center gap-2 px-6 border-b border-border">
-                    <div className="w-8 h-8 bg-primary-500 rounded-lg flex items-center justify-center">
-                        <span className="text-white font-bold text-lg">C</span>
-                    </div>
-                    <span className="text-xl font-bold text-primary-500">Courtify</span>
+                    <img src="/logo.png" alt="CourtHub Logo" className="h-8 w-auto object-contain" />
+                    <span className="text-xl font-bold text-primary-500">CourtHub</span>
                 </div>
 
                 {/* Navigation */}
@@ -80,7 +83,7 @@ export function AppLayout({ children }: AppLayoutProps) {
                 {/* Settings & Logout */}
                 <div className="p-3 border-t border-border space-y-1">
                     <NavLink
-                        to="/settings"
+                        to={ADMIN_ROUTES.settings}
                         className={({ isActive }) =>
                             cn(
                                 'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
@@ -109,9 +112,7 @@ export function AppLayout({ children }: AppLayoutProps) {
                 <header className="h-16 bg-background-secondary border-b border-border flex items-center justify-between px-4 md:px-6">
                     {/* Mobile logo */}
                     <div className="md:hidden flex items-center gap-2">
-                        <div className="w-8 h-8 bg-primary-500 rounded-lg flex items-center justify-center">
-                            <span className="text-white font-bold text-lg">C</span>
-                        </div>
+                        <img src="/logo.png" alt="CourtHub Logo" className="h-8 w-auto object-contain" />
                     </div>
 
                     {/* Search - hidden on mobile */}
@@ -124,9 +125,20 @@ export function AppLayout({ children }: AppLayoutProps) {
 
                     {/* Right side */}
                     <div className="flex items-center gap-2 md:gap-4">
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            className="gap-2"
+                            onClick={() => queryClient.invalidateQueries()}
+                            title="Tải lại dữ liệu"
+                        >
+                            <RefreshCw className={cn('w-4 h-4', isFetching > 0 && 'animate-spin')} />
+                            <span className="hidden lg:inline">Tải lại</span>
+                        </Button>
+
                         {/* Venue selector - hidden on mobile */}
                         <Button variant="secondary" size="sm" className="hidden sm:flex gap-2">
-                            <span className="hidden lg:inline">Courtify Phú Nhuận</span>
+                            <span className="hidden lg:inline">CourtHub Phú Nhuận</span>
                             <span className="lg:hidden">Cơ sở</span>
                             <ChevronDown className="w-4 h-4" />
                         </Button>
@@ -150,7 +162,16 @@ export function AppLayout({ children }: AppLayoutProps) {
                 </header>
 
                 {/* Page content - add bottom padding for mobile nav */}
-                <main className="flex-1 overflow-auto bg-background pb-16 md:pb-0 p-4 md:p-6">
+                <main 
+                    className="flex-1 overflow-auto bg-background pb-16 md:pb-0 p-4 md:p-6"
+                    style={{
+                        backgroundImage: 'url("/bg-admin.png")',
+                        backgroundSize: 'cover',
+                        backgroundPosition: 'center',
+                        backgroundRepeat: 'no-repeat',
+                        backgroundAttachment: 'fixed'
+                    }}
+                >
                     {children}
                 </main>
             </div>
@@ -160,3 +181,4 @@ export function AppLayout({ children }: AppLayoutProps) {
         </div>
     )
 }
+

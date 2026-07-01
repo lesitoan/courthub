@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Bell, Check, Clock, X, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { ADMIN_ROUTES } from '@/lib/routes';
 
 interface Notification {
     id: string;
@@ -30,7 +31,7 @@ const mockNotifications: Notification[] = [
         message: 'Nguyễn Văn A đã đặt Sân A1 lúc 18:00',
         time: '5 phút trước',
         read: false,
-        link: '/calendar',
+        link: ADMIN_ROUTES.calendar,
         data: { bookingId: 'booking-001' },
     },
     {
@@ -40,7 +41,7 @@ const mockNotifications: Notification[] = [
         message: 'Trần Thị B có lịch lúc 14:00 - Sân A2',
         time: '15 phút trước',
         read: false,
-        link: '/calendar',
+        link: ADMIN_ROUTES.calendar,
         data: { bookingId: 'booking-002' },
     },
     {
@@ -50,7 +51,7 @@ const mockNotifications: Notification[] = [
         message: 'Hóa đơn #INV-2026-001234 đã được thanh toán',
         time: '1 giờ trước',
         read: true,
-        link: '/invoices',
+        link: ADMIN_ROUTES.invoices,
         data: { invoiceId: 'INV-2026-001234' },
     },
     {
@@ -60,7 +61,7 @@ const mockNotifications: Notification[] = [
         message: 'Lê Văn C đã hủy lịch đặt lúc 20:00',
         time: '2 giờ trước',
         read: true,
-        link: '/calendar',
+        link: ADMIN_ROUTES.calendar,
         data: { bookingId: 'booking-003' },
     },
     {
@@ -70,7 +71,7 @@ const mockNotifications: Notification[] = [
         message: 'Cầu lông Yonex AS-50 còn 5 sản phẩm',
         time: '3 giờ trước',
         read: false,
-        link: '/inventory',
+        link: ADMIN_ROUTES.inventory,
     },
 ];
 
@@ -237,7 +238,7 @@ export function NotificationDropdown() {
                         <button
                             onClick={() => {
                                 setIsOpen(false);
-                                navigate('/notifications');
+                                navigate(ADMIN_ROUTES.notifications);
                             }}
                             className="w-full py-3 text-sm text-primary-500 hover:bg-background-tertiary transition-colors font-medium flex items-center justify-center gap-1"
                         >
@@ -266,3 +267,4 @@ export function NotificationDropdown() {
         </div>
     );
 }
+

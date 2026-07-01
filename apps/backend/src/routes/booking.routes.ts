@@ -4,6 +4,14 @@ import { authenticate } from '../middleware/auth.js';
 
 const router = Router();
 
+function parseLocalDayStart(date: string) {
+    return new Date(`${date}T00:00:00`);
+}
+
+function parseLocalDayEnd(date: string) {
+    return new Date(`${date}T23:59:59.999`);
+}
+
 // Get calendar data (optimized for calendar view)
 router.get('/calendar/:venueId', authenticate, async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -18,8 +26,8 @@ router.get('/calendar/:venueId', authenticate, async (req: Request, res: Respons
 
         const result = await bookingService.getCalendarData(
             req.params.venueId,
-            new Date(startDate as string),
-            new Date(endDate as string)
+            parseLocalDayStart(startDate as string),
+            parseLocalDayEnd(endDate as string)
         );
 
         res.json({
@@ -45,7 +53,7 @@ router.get('/check-availability', authenticate, async (req: Request, res: Respon
 
         const result = await bookingService.checkAvailability(
             courtId as string,
-            new Date(date as string),
+            parseLocalDayStart(date as string),
             startTime as string,
             endTime as string,
             excludeId as string
@@ -74,7 +82,7 @@ router.get('/calculate-price', authenticate, async (req: Request, res: Response,
 
         const result = await bookingService.calculatePrice(
             courtId as string,
-            new Date(date as string),
+            parseLocalDayStart(date as string),
             startTime as string,
             endTime as string
         );
@@ -132,7 +140,7 @@ router.post('/', authenticate, async (req: Request, res: Response, next: NextFun
     try {
         const input = {
             ...req.body,
-            date: new Date(req.body.date),
+            date: parseLocalDayStart(req.body.date),
             createdById: req.user?.userId,
         };
 

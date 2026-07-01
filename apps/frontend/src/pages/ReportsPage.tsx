@@ -18,18 +18,34 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 
 // Simple bar component for charts
-function Bar({ value, maxValue, label, color }: { value: number; maxValue: number; label: string; color: string }) {
+function Bar({
+    value,
+    actualValue,
+    maxValue,
+    label,
+}: {
+    value: number;
+    actualValue: number;
+    maxValue: number;
+    label: string;
+}) {
     const height = maxValue > 0 ? (value / maxValue) * 100 : 0;
+    const actualHeight = value > 0 ? Math.min((actualValue / value) * 100, 100) : 0;
     return (
         <div className="flex flex-col items-center gap-2">
-            <div className="w-10 h-36 bg-background-tertiary rounded-lg overflow-hidden flex flex-col-reverse">
+            <div className="relative w-10 h-36 bg-background-tertiary rounded-lg overflow-hidden">
                 <div
-                    className={cn('w-full transition-all duration-500', color)}
+                    className="absolute bottom-0 left-0 w-full rounded-t-lg bg-yellow-500/70 transition-all duration-500"
                     style={{ height: `${height}%` }}
+                />
+                <div
+                    className="absolute bottom-0 left-0 w-full rounded-t-lg bg-primary-500 transition-all duration-500"
+                    style={{ height: `${height * actualHeight / 100}%` }}
                 />
             </div>
             <span className="text-xs text-foreground-secondary">{label}</span>
-            <span className="text-xs text-foreground font-medium">{formatCurrency(value)}</span>
+            <span className="text-xs text-primary-500 font-medium">{formatCurrency(actualValue)}</span>
+            <span className="text-[10px] text-yellow-400">{formatCurrency(value)}</span>
         </div>
     );
 }
@@ -213,14 +229,23 @@ export default function ReportsPage() {
             </div>
 
             {/* Stats Cards */}
-            <div className="grid grid-cols-4 gap-4 mb-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-4 mb-6">
                 <StatCard
-                    title="Doanh thu hôm nay"
+                    title="Dự kiến hôm nay"
                     value={formatCurrency(dashboardStats?.todayRevenue || 0)}
                     icon={DollarSign}
                     trend={monthlyRevenue?.growth && monthlyRevenue.growth >= 0 ? 'up' : 'down'}
                     trendValue={`${monthlyRevenue?.growth || 0}% so với tháng trước`}
                     color="bg-primary-500/20 text-primary-500"
+                    loading={loadingStats}
+                />
+                <StatCard
+                    title="Thực nhận hôm nay"
+                    value={formatCurrency(dashboardStats?.actualTodayRevenue || 0)}
+                    icon={DollarSign}
+                    trend={monthlyRevenue?.actualGrowth && monthlyRevenue.actualGrowth >= 0 ? 'up' : 'down'}
+                    trendValue={`${monthlyRevenue?.actualGrowth || 0}% so với tháng trước`}
+                    color="bg-green-500/20 text-green-400"
                     loading={loadingStats}
                 />
                 <StatCard
@@ -238,8 +263,8 @@ export default function ReportsPage() {
                     loading={loadingStats}
                 />
                 <StatCard
-                    title="Doanh thu tháng này"
-                    value={formatCurrency(monthlyRevenue?.currentMonth || 0)}
+                    title="Thực nhận tháng này"
+                    value={formatCurrency(monthlyRevenue?.actualCurrentMonth || 0)}
                     icon={TrendingUp}
                     color="bg-purple-500/20 text-purple-400"
                 />
@@ -253,7 +278,9 @@ export default function ReportsPage() {
                         <h3 className="font-semibold text-foreground">Doanh thu 7 ngày qua</h3>
                     </div>
                     <span className="text-sm text-foreground-secondary">
-                        Tổng: {formatCurrency(chartData.reduce((s, d) => s + d.revenue, 0))}
+                        <span className="text-yellow-400">Dự kiến: {formatCurrency(chartData.reduce((s, d) => s + d.revenue, 0))}</span>
+                        <span className="mx-2">•</span>
+                        <span className="text-primary-500">Thực nhận: {formatCurrency(chartData.reduce((s, d) => s + d.actualRevenue, 0))}</span>
                     </span>
                 </div>
                 <div className="flex items-end justify-around">
@@ -261,9 +288,9 @@ export default function ReportsPage() {
                         <Bar
                             key={i}
                             value={data.revenue}
+                            actualValue={data.actualRevenue}
                             maxValue={maxRevenue}
                             label={data.date}
-                            color="bg-primary-500"
                         />
                     ))}
                 </div>

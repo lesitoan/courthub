@@ -17,6 +17,7 @@ import {
     Download
 } from 'lucide-react';
 import { cn, formatCurrency, formatDate } from '@/lib/utils';
+import { ADMIN_ROUTES } from '@/lib/routes';
 import { Button } from '@/components/ui/button';
 import { invoiceApi, Invoice } from '@/services/invoice.service';
 import { useToast } from '@/hooks/use-toast';
@@ -432,7 +433,7 @@ export default function InvoicesPage() {
                             </div>
                             <div className="flex items-center gap-2">
                                 <button
-                                    onClick={() => navigate(`/invoices/${selectedInvoice.id}/print`)}
+                                    onClick={() => navigate(ADMIN_ROUTES.invoicePrint(selectedInvoice.id))}
                                     className="flex items-center gap-2 px-3 py-2 bg-primary-500 hover:bg-primary-600 text-white rounded-lg transition-colors"
                                     title="In hóa đơn"
                                 >
@@ -544,3 +545,4 @@ export default function InvoicesPage() {
         </div>
     );
 }
+
