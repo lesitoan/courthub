@@ -1,0 +1,291 @@
+// Prisma Schema for Courtify - Badminton Court Management System
+// Database: PostgreSQL for production
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================================
+// MODELS (SQLite compatible - no enums, use String instead)
+// ============================================================================
+
+/// User - Staff/Admin accounts
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  passwordHash  String
+  name          String
+  phone         String?
+  avatar        String?
+  role          String    @default("STAFF") // SUPER_ADMIN, ADMIN, MANAGER, STAFF
+  isActive      Boolean   @default(true)
+  lastLoginAt   DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  venues        VenueStaff[]
+  bookings      Booking[]     @relation("CreatedByUser")
+  refreshTokens RefreshToken[]
+
+  @@map("users")
+}
+
+/// RefreshToken - JWT refresh tokens
+model RefreshToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("refresh_tokens")
+}
+
+/// Venue - Sports facility/location
+model Venue {
+  id           String   @id @default(cuid())
+  name         String
+  address      String
+  phone        String?
+  email        String?
+  description  String?
+  logo         String?
+  openTime     String   @default("06:00")
+  closeTime    String   @default("23:00")
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  courts       Court[]
+  staff        VenueStaff[]
+  pricingRules PricingRule[]
+  services     Service[]
+  products     Product[]
+
+  @@map("venues")
+}
+
+/// VenueStaff - Many-to-many User <-> Venue
+model VenueStaff {
+  id        String   @id @default(cuid())
+  userId    String
+  venueId   String
+  role      String   @default("STAFF")
+  createdAt DateTime @default(now())
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  venue Venue @relation(fields: [venueId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, venueId])
+  @@map("venue_staff")
+}
+
+/// Court - Individual playing court
+model Court {
+  id          String   @id @default(cuid())
+  venueId     String
+  name        String
+  description String?
+  surfaceType String?
+  isIndoor    Boolean  @default(true)
+  status      String   @default("ACTIVE") // ACTIVE, MAINTENANCE, INACTIVE
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  venue    Venue     @relation(fields: [venueId], references: [id], onDelete: Cascade)
+  bookings Booking[]
+
+  @@map("courts")
+}
+
+/// Customer - Court users/clients
+model Customer {
+  id              String    @id @default(cuid())
+  name            String
+  phone           String    @unique
+  email           String?
+  dateOfBirth     DateTime?
+  address         String?
+  notes           String?
+  membershipTier  String?   // BRONZE, SILVER, GOLD, PLATINUM
+  membershipStart DateTime?
+  membershipEnd   DateTime?
+  totalBookings   Int       @default(0)
+  totalSpent      Float     @default(0)
+  points          Int       @default(0)
+  isActive        Boolean   @default(true)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  bookings Booking[]
+  invoices Invoice[]
+
+  @@map("customers")
+}
+
+/// Booking - Court reservation
+model Booking {
+  id          String   @id @default(cuid())
+  courtId     String
+  customerId  String?
+  createdById String?
+  
+  date        DateTime
+  startTime   String
+  endTime     String
+  
+  status      String   @default("PENDING") // PENDING, CONFIRMED, IN_PROGRESS, COMPLETED, CANCELLED, NO_SHOW
+  totalAmount Float    @default(0)
+  notes       String?
+  
+  checkedInAt  DateTime?
+  checkedOutAt DateTime?
+  
+  isRecurring    Boolean @default(false)
+  recurringGroup String?
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  court       Court        @relation(fields: [courtId], references: [id], onDelete: Cascade)
+  customer    Customer?    @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  createdBy   User?        @relation("CreatedByUser", fields: [createdById], references: [id], onDelete: SetNull)
+  invoiceItem InvoiceItem?
+
+  @@map("bookings")
+}
+
+/// PricingRule - Dynamic pricing configuration
+model PricingRule {
+  id           String   @id @default(cuid())
+  venueId      String
+  name         String
+  description  String?
+  dayOfWeek    String?  // MONDAY, TUESDAY, etc.
+  startTime    String?
+  endTime      String?
+  pricePerHour Float
+  priority     Int      @default(0)
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  venue Venue @relation(fields: [venueId], references: [id], onDelete: Cascade)
+
+  @@map("pricing_rules")
+}
+
+/// Service - Additional services
+model Service {
+  id          String   @id @default(cuid())
+  venueId     String
+  name        String
+  description String?
+  price       Float
+  unit        String   @default("lần")
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  venue        Venue         @relation(fields: [venueId], references: [id], onDelete: Cascade)
+  invoiceItems InvoiceItem[]
+
+  @@map("services")
+}
+
+/// Product - Sellable items
+model Product {
+  id          String   @id @default(cuid())
+  venueId     String
+  name        String
+  description String?
+  price       Float
+  stock       Int      @default(0)
+  unit        String   @default("cái")
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  venue        Venue         @relation(fields: [venueId], references: [id], onDelete: Cascade)
+  invoiceItems InvoiceItem[]
+
+  @@map("products")
+}
+
+/// Invoice - Payment record
+model Invoice {
+  id            String    @id @default(cuid())
+  invoiceNumber String    @unique
+  customerId    String?
+  subtotal      Float
+  discount      Float     @default(0)
+  total         Float
+  paymentStatus String    @default("PENDING") // PENDING, PAID, PARTIAL, REFUNDED
+  paymentMethod String?   // CASH, BANK_TRANSFER, MOMO, ZALO_PAY, CARD
+  paidAmount    Float     @default(0)
+  paidAt        DateTime?
+  notes         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  customer Customer?     @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  items    InvoiceItem[]
+
+  @@map("invoices")
+}
+
+/// InvoiceItem - Line items in invoice
+model InvoiceItem {
+  id          String  @id @default(cuid())
+  invoiceId   String
+  bookingId   String? @unique
+  serviceId   String?
+  productId   String?
+  description String
+  quantity    Int     @default(1)
+  unitPrice   Float
+  total       Float
+
+  invoice Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  booking Booking? @relation(fields: [bookingId], references: [id], onDelete: SetNull)
+  service Service? @relation(fields: [serviceId], references: [id], onDelete: SetNull)
+  product Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+
+  @@map("invoice_items")
+}
+
+/// MembershipPlan - Membership tier configuration
+model MembershipPlan {
+  id           String   @id @default(cuid())
+  tier         String   @unique // BRONZE, SILVER, GOLD, PLATINUM
+  name         String
+  description  String?
+  price        Float
+  durationDays Int
+  discount     Int      @default(0)
+  benefits     String?
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("membership_plans")
+}
+
+/// SystemConfig - Global configuration
+model SystemConfig {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("system_config")
+}

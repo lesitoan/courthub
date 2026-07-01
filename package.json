@@ -1,0 +1,34 @@
+{
+    "name": "courtify",
+    "version": "1.0.0",
+    "private": true,
+    "description": "Badminton Court Management System",
+    "workspaces": [
+        "apps/*",
+        "packages/*"
+    ],
+    "scripts": {
+        "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+        "dev:backend": "npm run dev --workspace=@courtify/backend",
+        "dev:frontend": "npm run dev --workspace=@courtify/frontend",
+        "build": "npm run build --workspaces",
+        "build:backend": "npm run build --workspace=@courtify/backend",
+        "build:frontend": "npm run build --workspace=@courtify/frontend",
+        "db:generate": "npm run db:generate --workspace=@courtify/backend",
+        "db:push": "npm run db:push --workspace=@courtify/backend",
+        "db:migrate": "npm run db:migrate --workspace=@courtify/backend",
+        "db:seed": "npm run db:seed --workspace=@courtify/backend",
+        "db:studio": "npm run db:studio --workspace=@courtify/backend",
+        "lint": "npm run lint --workspaces --if-present",
+        "test": "npm run test --workspaces --if-present",
+        "clean": "rimraf apps/*/dist apps/*/node_modules packages/*/dist packages/*/node_modules node_modules"
+    },
+    "devDependencies": {
+        "concurrently": "^8.2.2",
+        "rimraf": "^5.0.5"
+    },
+    "engines": {
+        "node": ">=18.0.0",
+        "npm": ">=9.0.0"
+    }
+}

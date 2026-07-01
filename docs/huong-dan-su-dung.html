@@ -1,0 +1,1002 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hướng Dẫn Sử Dụng - Courtify</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --primary: #22c55e;
+            --primary-dark: #16a34a;
+            --bg-dark: #0a0a0a;
+            --bg-secondary: #141414;
+            --bg-tertiary: #1a1a1a;
+            --text-primary: #ffffff;
+            --text-secondary: #a1a1aa;
+            --text-muted: #71717a;
+            --border: #27272a;
+            --accent-blue: #3b82f6;
+            --accent-purple: #a855f7;
+            --accent-orange: #f97316;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            line-height: 1.7;
+        }
+
+        /* Navigation */
+        .nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(10, 10, 10, 0.95);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border);
+            z-index: 100;
+            padding: 1rem 2rem;
+        }
+
+        .nav-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .nav-logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-weight: 700;
+            font-size: 1.5rem;
+            text-decoration: none;
+            color: var(--text-primary);
+        }
+
+        .nav-logo span {
+            color: var(--primary);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+        }
+
+        .nav-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        .nav-links a:hover {
+            color: var(--primary);
+        }
+
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: var(--primary);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .back-btn:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+        }
+
+        /* Main Content */
+        .main-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 8rem 2rem 4rem;
+        }
+
+        /* Header */
+        .guide-header {
+            text-align: center;
+            margin-bottom: 4rem;
+            padding: 4rem 2rem;
+            background: linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(59, 130, 246, 0.05));
+            border-radius: 24px;
+            border: 1px solid var(--border);
+        }
+
+        .guide-header h1 {
+            font-size: clamp(2rem, 5vw, 3.5rem);
+            font-weight: 800;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, var(--primary), var(--accent-blue));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .guide-header p {
+            font-size: 1.25rem;
+            color: var(--text-secondary);
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        /* Table of Contents */
+        .toc {
+            background: var(--bg-secondary);
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 4rem;
+            border: 1px solid var(--border);
+        }
+
+        .toc h2 {
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .toc-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1rem;
+        }
+
+        .toc-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 1rem;
+            background: var(--bg-tertiary);
+            border-radius: 12px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: all 0.3s;
+            border: 1px solid transparent;
+        }
+
+        .toc-item:hover {
+            background: rgba(34, 197, 94, 0.1);
+            border-color: var(--primary);
+            color: var(--text-primary);
+        }
+
+        .toc-number {
+            width: 32px;
+            height: 32px;
+            background: var(--primary);
+            color: white;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.875rem;
+        }
+
+        /* Section Styles */
+        .section {
+            margin-bottom: 4rem;
+            scroll-margin-top: 6rem;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid var(--primary);
+        }
+
+        .section-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, var(--primary), var(--accent-blue));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .section h2 {
+            font-size: 2rem;
+            font-weight: 700;
+        }
+
+        .section h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin: 2rem 0 1rem;
+            color: var(--primary);
+        }
+
+        .section p {
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+        }
+
+        /* Cards */
+        .card {
+            background: var(--bg-secondary);
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 1.5rem;
+            border: 1px solid var(--border);
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .card-title .emoji {
+            font-size: 1.5rem;
+        }
+
+        /* Steps */
+        .steps {
+            counter-reset: step;
+        }
+
+        .step {
+            position: relative;
+            padding-left: 3.5rem;
+            margin-bottom: 2rem;
+            counter-increment: step;
+        }
+
+        .step::before {
+            content: counter(step);
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 40px;
+            height: 40px;
+            background: var(--primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            color: white;
+        }
+
+        .step::after {
+            content: '';
+            position: absolute;
+            left: 19px;
+            top: 48px;
+            width: 2px;
+            height: calc(100% + 1rem);
+            background: var(--border);
+        }
+
+        .step:last-child::after {
+            display: none;
+        }
+
+        .step-title {
+            font-weight: 600;
+            font-size: 1.125rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .step-content {
+            color: var(--text-secondary);
+        }
+
+        /* Code blocks */
+        .code-block {
+            background: var(--bg-tertiary);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin: 1rem 0;
+            overflow-x: auto;
+            border: 1px solid var(--border);
+        }
+
+        .code-block code {
+            font-family: 'Fira Code', monospace;
+            font-size: 0.875rem;
+            color: var(--primary);
+        }
+
+        .code-block .comment {
+            color: var(--text-muted);
+        }
+
+        /* Image */
+        .screenshot-wrapper {
+            margin: 2rem 0;
+            border-radius: 16px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .screenshot-wrapper img {
+            width: 100%;
+            display: block;
+        }
+
+        .screenshot-caption {
+            background: var(--bg-secondary);
+            padding: 1rem 1.5rem;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            text-align: center;
+            border-top: 1px solid var(--border);
+        }
+
+        /* Requirements */
+        .requirements-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .requirement-card {
+            background: var(--bg-secondary);
+            border-radius: 16px;
+            padding: 1.5rem;
+            border: 1px solid var(--border);
+            transition: transform 0.3s;
+        }
+
+        .requirement-card:hover {
+            transform: translateY(-4px);
+        }
+
+        .requirement-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, rgba(34, 197, 94, 0.2), rgba(59, 130, 246, 0.2));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .requirement-card h4 {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .requirement-card p {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin: 0;
+        }
+
+        /* Tips */
+        .tip {
+            background: rgba(59, 130, 246, 0.1);
+            border-left: 4px solid var(--accent-blue);
+            padding: 1rem 1.5rem;
+            border-radius: 0 12px 12px 0;
+            margin: 1.5rem 0;
+        }
+
+        .tip-title {
+            font-weight: 600;
+            color: var(--accent-blue);
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .warning {
+            background: rgba(249, 115, 22, 0.1);
+            border-left: 4px solid var(--accent-orange);
+        }
+
+        .warning .tip-title {
+            color: var(--accent-orange);
+        }
+
+        /* Feature List */
+        .feature-list {
+            list-style: none;
+            margin: 1.5rem 0;
+        }
+
+        .feature-list li {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            padding: 0.75rem 0;
+            color: var(--text-secondary);
+        }
+
+        .feature-list li::before {
+            content: '✓';
+            color: var(--primary);
+            font-weight: 700;
+            flex-shrink: 0;
+            width: 24px;
+            height: 24px;
+            background: rgba(34, 197, 94, 0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+        }
+
+        /* Footer */
+        .guide-footer {
+            text-align: center;
+            padding: 4rem 2rem;
+            background: var(--bg-secondary);
+            border-radius: 24px;
+            border: 1px solid var(--border);
+        }
+
+        .guide-footer h2 {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .guide-footer p {
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+        }
+
+        .contact-info {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .contact-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-secondary);
+        }
+
+        .contact-item strong {
+            color: var(--primary);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .nav-content {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .main-content {
+                padding: 6rem 1rem 2rem;
+            }
+
+            .guide-header {
+                padding: 2rem 1rem;
+            }
+
+            .toc-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .requirements-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .contact-info {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Navigation -->
+    <nav class="nav">
+        <div class="nav-content">
+            <a href="index.html" class="nav-logo">
+                🏸 Court<span>ify</span>
+            </a>
+            <div class="nav-links">
+                <a href="#cai-dat">Cài đặt</a>
+                <a href="#dang-nhap">Sử dụng</a>
+                <a href="#dat-san">Tính năng</a>
+            </div>
+            <a href="index.html" class="back-btn">
+                ← Quay lại trang chủ
+            </a>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Header -->
+        <header class="guide-header">
+            <h1>📖 Hướng Dẫn Sử Dụng</h1>
+            <p>Tài liệu hướng dẫn chi tiết giúp bạn nhanh chóng làm chủ hệ thống quản lý sân cầu lông Courtify</p>
+        </header>
+
+        <!-- Table of Contents -->
+        <section class="toc">
+            <h2>📋 Mục Lục</h2>
+            <div class="toc-grid">
+                <a href="#yeu-cau" class="toc-item">
+                    <span class="toc-number">1</span>
+                    <span>Yêu cầu hệ thống</span>
+                </a>
+                <a href="#cai-dat" class="toc-item">
+                    <span class="toc-number">2</span>
+                    <span>Hướng dẫn cài đặt</span>
+                </a>
+                <a href="#dang-nhap" class="toc-item">
+                    <span class="toc-number">3</span>
+                    <span>Đăng nhập hệ thống</span>
+                </a>
+                <a href="#dashboard" class="toc-item">
+                    <span class="toc-number">4</span>
+                    <span>Tổng quan Dashboard</span>
+                </a>
+                <a href="#dat-san" class="toc-item">
+                    <span class="toc-number">5</span>
+                    <span>Đặt sân & Lịch</span>
+                </a>
+                <a href="#khach-hang" class="toc-item">
+                    <span class="toc-number">6</span>
+                    <span>Quản lý khách hàng</span>
+                </a>
+                <a href="#co-so" class="toc-item">
+                    <span class="toc-number">7</span>
+                    <span>Quản lý cơ sở</span>
+                </a>
+                <a href="#hoa-don" class="toc-item">
+                    <span class="toc-number">8</span>
+                    <span>Hóa đơn & Báo cáo</span>
+                </a>
+            </div>
+        </section>
+
+        <!-- Section 1: System Requirements -->
+        <section id="yeu-cau" class="section">
+            <div class="section-header">
+                <div class="section-icon">💻</div>
+                <h2>1. Yêu Cầu Hệ Thống</h2>
+            </div>
+
+            <div class="requirements-grid">
+                <div class="requirement-card">
+                    <div class="requirement-icon">🖥️</div>
+                    <h4>Phần cứng</h4>
+                    <p>RAM 4GB trở lên, ổ cứng còn trống 500MB</p>
+                </div>
+                <div class="requirement-card">
+                    <div class="requirement-icon">🌐</div>
+                    <h4>Trình duyệt</h4>
+                    <p>Chrome 90+, Firefox 88+, Edge 90+ hoặc Safari 14+</p>
+                </div>
+                <div class="requirement-card">
+                    <div class="requirement-icon">📡</div>
+                    <h4>Kết nối mạng</h4>
+                    <p>Kết nối Internet ổn định (khuyến nghị 10Mbps+)</p>
+                </div>
+                <div class="requirement-card">
+                    <div class="requirement-icon">📱</div>
+                    <h4>Thiết bị di động</h4>
+                    <p>Hỗ trợ responsive trên mọi thiết bị</p>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">
+                    <span class="emoji">⚙️</span>
+                    Yêu cầu cho Developers (Self-hosted)
+                </div>
+                <ul class="feature-list">
+                    <li>Node.js phiên bản 18.0.0 trở lên</li>
+                    <li>NPM phiên bản 9.0.0 trở lên</li>
+                    <li>Git để clone source code</li>
+                    <li>PostgreSQL hoặc SQLite cho database</li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- Section 2: Installation -->
+        <section id="cai-dat" class="section">
+            <div class="section-header">
+                <div class="section-icon">🔧</div>
+                <h2>2. Hướng Dẫn Cài Đặt</h2>
+            </div>
+
+            <div class="card">
+                <div class="card-title">
+                    <span class="emoji">📦</span>
+                    Cài đặt từ Source Code
+                </div>
+
+                <div class="steps">
+                    <div class="step">
+                        <div class="step-title">Clone repository</div>
+                        <div class="step-content">
+                            <div class="code-block">
+                                <code>git clone https://github.com/kteam/courtify.git<br>
+cd courtify</code>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="step">
+                        <div class="step-title">Cài đặt dependencies</div>
+                        <div class="step-content">
+                            <div class="code-block">
+                                <code><span class="comment"># Cài đặt các thư viện cần thiết</span><br>
+npm install</code>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="step">
+                        <div class="step-title">Cấu hình môi trường</div>
+                        <div class="step-content">
+                            <p>Tạo file <code>.env</code> trong thư mục root với nội dung:</p>
+                            <div class="code-block">
+                                <code>DATABASE_URL=file:./dev.db<br>
+JWT_SECRET=your-secret-key<br>
+PORT=3000</code>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="step">
+                        <div class="step-title">Khởi tạo database</div>
+                        <div class="step-content">
+                            <div class="code-block">
+                                <code><span class="comment"># Chạy migration và seed data</span><br>
+npm run db:migrate<br>
+npm run db:seed</code>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="step">
+                        <div class="step-title">Khởi động ứng dụng</div>
+                        <div class="step-content">
+                            <div class="code-block">
+                                <code><span class="comment"># Chạy cả frontend và backend</span><br>
+npm run dev</code>
+                            </div>
+                            <p>Ứng dụng sẽ chạy tại: <strong>http://localhost:5173</strong></p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tip">
+                    <div class="tip-title">💡 Mẹo</div>
+                    <p>Sử dụng tài khoản mặc định để đăng nhập: <strong>admin@courtify.vn</strong> /
+                        <strong>admin123</strong>
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 3: Login -->
+        <section id="dang-nhap" class="section">
+            <div class="section-header">
+                <div class="section-icon">🔐</div>
+                <h2>3. Đăng Nhập Hệ Thống</h2>
+            </div>
+
+            <p>Sau khi cài đặt thành công, truy cập ứng dụng và đăng nhập với tài khoản quản trị.</p>
+
+            <div class="screenshot-wrapper">
+                <img src="images/logout_complete_1770260976698.png" alt="Màn hình đăng nhập Courtify">
+                <div class="screenshot-caption">Màn hình đăng nhập của hệ thống Courtify</div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">
+                    <span class="emoji">👤</span>
+                    Thông tin đăng nhập mặc định
+                </div>
+                <ul class="feature-list">
+                    <li><strong>Email:</strong> admin@courtify.vn</li>
+                    <li><strong>Mật khẩu:</strong> admin123</li>
+                </ul>
+
+                <div class="warning">
+                    <div class="tip-title">⚠️ Chú ý bảo mật</div>
+                    <p>Sau khi đăng nhập lần đầu, hãy đổi mật khẩu ngay trong phần Cài đặt để đảm bảo an toàn.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 4: Dashboard -->
+        <section id="dashboard" class="section">
+            <div class="section-header">
+                <div class="section-icon">📊</div>
+                <h2>4. Tổng Quan Dashboard</h2>
+            </div>
+
+            <p>Dashboard là trang tổng quan giúp bạn nắm bắt nhanh tình hình hoạt động của sân.</p>
+
+            <div class="screenshot-wrapper">
+                <img src="images/dashboard_complete_1770260754614.png" alt="Dashboard Courtify">
+                <div class="screenshot-caption">Giao diện Dashboard với các thống kê quan trọng</div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">
+                    <span class="emoji">✨</span>
+                    Các thành phần chính
+                </div>
+                <ul class="feature-list">
+                    <li><strong>Tổng quan nhanh:</strong> Số lượng đặt sân hôm nay, doanh thu, sân trống</li>
+                    <li><strong>Biểu đồ doanh thu:</strong> Theo dõi xu hướng doanh thu theo tuần/tháng</li>
+                    <li><strong>Lịch đặt sắp tới:</strong> Danh sách các đặt sân trong ngày</li>
+                    <li><strong>Tìm kiếm nhanh:</strong> Tìm khách hàng, booking theo từ khóa</li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- Section 5: Booking Calendar -->
+        <section id="dat-san" class="section">
+            <div class="section-header">
+                <div class="section-icon">📅</div>
+                <h2>5. Đặt Sân & Lịch</h2>
+            </div>
+
+            <p>Quản lý lịch đặt sân trực quan với nhiều chế độ xem: Ngày, Tuần, Danh sách.</p>
+
+            <div class="screenshot-wrapper">
+                <img src="images/calendar_complete_1770260784787.png" alt="Lịch đặt sân">
+                <div class="screenshot-caption">Giao diện lịch đặt sân theo ngày với các slot thời gian</div>
+            </div>
+
+            <h3>5.1 Tạo đặt sân mới</h3>
+            <div class="card">
+                <div class="steps">
+                    <div class="step">
+                        <div class="step-title">Nhấn nút "Đặt sân mới"</div>
+                        <div class="step-content">
+                            <p>Nút màu xanh ở góc trên bên phải màn hình</p>
+                        </div>
+                    </div>
+                    <div class="step">
+                        <div class="step-title">Điền thông tin đặt sân</div>
+                        <div class="step-content">
+                            <p>Chọn sân, ngày, giờ bắt đầu và kết thúc</p>
+                        </div>
+                    </div>
+                    <div class="step">
+                        <div class="step-title">Chọn khách hàng (nếu có)</div>
+                        <div class="step-content">
+                            <p>Tìm và chọn khách hàng từ danh sách hoặc để trống cho khách vãng lai</p>
+                        </div>
+                    </div>
+                    <div class="step">
+                        <div class="step-title">Xác nhận đặt sân</div>
+                        <div class="step-content">
+                            <p>Nhấn "Đặt sân" để hoàn tất</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="screenshot-wrapper">
+                <img src="images/new_booking_modal_1770256150669.png" alt="Modal đặt sân mới">
+                <div class="screenshot-caption">Form đặt sân mới với tính năng kiểm tra trùng lịch tự động</div>
+            </div>
+
+            <h3>5.2 Check-in / Check-out</h3>
+            <div class="card">
+                <p>Click vào một booking trên lịch để mở panel chi tiết. Từ đây bạn có thể:</p>
+                <ul class="feature-list">
+                    <li><strong>Check-in:</strong> Xác nhận khách đã đến chơi</li>
+                    <li><strong>Check-out:</strong> Kết thúc và tạo hóa đơn thanh toán</li>
+                    <li><strong>Chỉnh sửa:</strong> Thay đổi thời gian, thêm ghi chú</li>
+                    <li><strong>Hủy:</strong> Hủy lịch đặt nếu khách không đến</li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- Section 6: Customers -->
+        <section id="khach-hang" class="section">
+            <div class="section-header">
+                <div class="section-icon">👥</div>
+                <h2>6. Quản Lý Khách Hàng</h2>
+            </div>
+
+            <p>Theo dõi thông tin khách hàng, lịch sử đặt sân và chương trình thành viên.</p>
+
+            <div class="screenshot-wrapper">
+                <img src="images/customers_complete_1770260847258.png" alt="Quản lý khách hàng">
+                <div class="screenshot-caption">Danh sách khách hàng với thông tin hạng thành viên</div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">
+                    <span class="emoji">🏆</span>
+                    Hệ thống thành viên
+                </div>
+                <ul class="feature-list">
+                    <li><strong>Bronze:</strong> Khách hàng mới, ưu đãi 5%</li>
+                    <li><strong>Silver:</strong> Đặt từ 10 lần, ưu đãi 10%</li>
+                    <li><strong>Gold:</strong> Đặt từ 30 lần, ưu đãi 15%</li>
+                    <li><strong>Platinum:</strong> Đặt từ 50 lần, ưu đãi 20%</li>
+                </ul>
+            </div>
+
+            <h3>6.1 Thêm khách hàng mới</h3>
+            <div class="screenshot-wrapper">
+                <img src="images/add_customer_modal_1770246425055.png" alt="Thêm khách hàng">
+                <div class="screenshot-caption">Form thêm khách hàng mới</div>
+            </div>
+        </section>
+
+        <!-- Section 7: Venues -->
+        <section id="co-so" class="section">
+            <div class="section-header">
+                <div class="section-icon">🏢</div>
+                <h2>7. Quản Lý Cơ Sở</h2>
+            </div>
+
+            <p>Quản lý nhiều chi nhánh/cơ sở với đầy đủ thông tin địa chỉ, giờ hoạt động và các sân.</p>
+
+            <div class="screenshot-wrapper">
+                <img src="images/venues_management_page_1770262363914.png" alt="Quản lý cơ sở">
+                <div class="screenshot-caption">Danh sách các cơ sở với số lượng sân và doanh thu</div>
+            </div>
+
+            <h3>7.1 Thêm cơ sở mới</h3>
+            <div class="screenshot-wrapper">
+                <img src="images/add_venue_modal_1770246360354.png" alt="Thêm cơ sở">
+                <div class="screenshot-caption">Form thêm cơ sở/chi nhánh mới</div>
+            </div>
+
+            <h3>7.2 Quản lý sân trong cơ sở</h3>
+            <div class="screenshot-wrapper">
+                <img src="images/courts_complete_1770260953286.png" alt="Quản lý sân">
+                <div class="screenshot-caption">Danh sách sân trong một cơ sở</div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">
+                    <span class="emoji">🎾</span>
+                    Thông tin sân
+                </div>
+                <ul class="feature-list">
+                    <li><strong>Tên sân:</strong> Gắn mã định danh (Sân A1, Sân B2...)</li>
+                    <li><strong>Giá thuê:</strong> Giá theo giờ, có thể khác nhau theo khung giờ</li>
+                    <li><strong>Trạng thái:</strong> Hoạt động / Bảo trì / Ngừng hoạt động</li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- Section 8: Invoices & Reports -->
+        <section id="hoa-don" class="section">
+            <div class="section-header">
+                <div class="section-icon">📈</div>
+                <h2>8. Hóa Đơn & Báo Cáo</h2>
+            </div>
+
+            <h3>8.1 Quản lý hóa đơn</h3>
+            <div class="screenshot-wrapper">
+                <img src="images/invoices_complete_1770260874650.png" alt="Hóa đơn">
+                <div class="screenshot-caption">Danh sách hóa đơn với trạng thái thanh toán</div>
+            </div>
+
+            <h3>8.2 Báo cáo thống kê</h3>
+            <div class="screenshot-wrapper">
+                <img src="images/reports_complete_1770260927740.png" alt="Báo cáo">
+                <div class="screenshot-caption">Báo cáo doanh thu chi tiết theo thời gian</div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">
+                    <span class="emoji">📊</span>
+                    Các loại báo cáo
+                </div>
+                <ul class="feature-list">
+                    <li><strong>Doanh thu:</strong> Theo ngày/tuần/tháng với biểu đồ trực quan</li>
+                    <li><strong>Lượt đặt:</strong> Thống kê số lượng đặt sân theo thời gian</li>
+                    <li><strong>Khách hàng:</strong> Top khách hàng, tỷ lệ khách mới/cũ</li>
+                    <li><strong>Hiệu suất sân:</strong> Tỷ lệ sử dụng từng sân</li>
+                </ul>
+            </div>
+
+            <h3>8.3 Cài đặt hệ thống</h3>
+            <div class="screenshot-wrapper">
+                <img src="images/settings_main_1770261047740.png" alt="Cài đặt">
+                <div class="screenshot-caption">Trang cài đặt với các tùy chọn cấu hình</div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="guide-footer">
+            <h2>🎉 Chúc bạn sử dụng hiệu quả!</h2>
+            <p>Nếu cần hỗ trợ thêm, vui lòng liên hệ với đội ngũ Kteam</p>
+
+            <div class="contact-info">
+                <div class="contact-item">
+                    <strong>📧 Email:</strong> plus.kimlong@gmail.com
+                </div>
+                <div class="contact-item">
+                    <strong>📘 Facebook:</strong> facebook.com/howkteam
+                </div>
+                <div class="contact-item">
+                    <strong>🌐 Website:</strong> kteam.vn
+                </div>
+            </div>
+        </footer>
+    </main>
+
+    <script>
+        // Smooth scroll for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Active nav link on scroll
+        const sections = document.querySelectorAll('.section');
+        const navLinks = document.querySelectorAll('.nav-links a');
+
+        window.addEventListener('scroll', () => {
+            let current = '';
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop;
+                if (scrollY >= sectionTop - 200) {
+                    current = section.getAttribute('id');
+                }
+            });
+
+            navLinks.forEach(link => {
+                link.style.color = link.getAttribute('href').includes(current)
+                    ? '#22c55e'
+                    : '';
+            });
+        });
+    </script>
+</body>
+
+</html>

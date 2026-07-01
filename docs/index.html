@@ -1,0 +1,1185 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Courtify - Hệ Thống Quản Lý Sân Cầu Lông Chuyên Nghiệp</title>
+    <meta name="description"
+        content="Courtify - Giải pháp quản lý sân cầu lông toàn diện với đặt sân trực tuyến, quản lý khách hàng, và báo cáo doanh thu thời gian thực.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --primary: #22c55e;
+            --primary-dark: #16a34a;
+            --primary-light: #4ade80;
+            --bg-dark: #0a0a0a;
+            --bg-secondary: #141414;
+            --bg-tertiary: #1a1a1a;
+            --text-primary: #ffffff;
+            --text-secondary: #a1a1aa;
+            --text-muted: #71717a;
+            --border: #27272a;
+            --accent-blue: #3b82f6;
+            --accent-purple: #a855f7;
+            --accent-orange: #f97316;
+            --accent-pink: #ec4899;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            line-height: 1.7;
+            overflow-x: hidden;
+        }
+
+        /* Animated background */
+        .bg-gradient {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background:
+                radial-gradient(ellipse 80% 50% at 50% -20%, rgba(34, 197, 94, 0.15), transparent),
+                radial-gradient(ellipse 60% 30% at 80% 50%, rgba(59, 130, 246, 0.1), transparent),
+                radial-gradient(ellipse 60% 30% at 20% 80%, rgba(168, 85, 247, 0.08), transparent);
+        }
+
+        /* Navigation */
+        .nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(10, 10, 10, 0.8);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            z-index: 100;
+            padding: 1rem 2rem;
+        }
+
+        .nav-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .nav-logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-weight: 800;
+            font-size: 1.75rem;
+            text-decoration: none;
+            color: var(--text-primary);
+        }
+
+        .nav-logo span {
+            background: linear-gradient(135deg, var(--primary), var(--accent-blue));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2.5rem;
+        }
+
+        .nav-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.95rem;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--primary);
+            transition: width 0.3s;
+        }
+
+        .nav-links a:hover {
+            color: var(--text-primary);
+        }
+
+        .nav-links a:hover::after {
+            width: 100%;
+        }
+
+        .nav-cta {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.875rem 1.75rem;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            text-decoration: none;
+            transition: all 0.3s;
+            cursor: pointer;
+            border: none;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            box-shadow: 0 4px 20px rgba(34, 197, 94, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(34, 197, 94, 0.4);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-primary);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: var(--primary);
+        }
+
+        /* Hero Section */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            padding: 8rem 2rem 4rem;
+            position: relative;
+        }
+
+        .hero-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1.2fr;
+            gap: 4rem;
+            align-items: center;
+        }
+
+        .hero-text {
+            max-width: 600px;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(34, 197, 94, 0.1);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            padding: 0.5rem 1rem;
+            border-radius: 100px;
+            font-size: 0.875rem;
+            color: var(--primary);
+            margin-bottom: 1.5rem;
+        }
+
+        .hero-badge::before {
+            content: '';
+            width: 8px;
+            height: 8px;
+            background: var(--primary);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        .hero h1 {
+            font-size: clamp(2.5rem, 5vw, 4rem);
+            font-weight: 900;
+            line-height: 1.1;
+            margin-bottom: 1.5rem;
+        }
+
+        .hero h1 .highlight {
+            background: linear-gradient(135deg, var(--primary), var(--accent-blue));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero-description {
+            font-size: 1.25rem;
+            color: var(--text-secondary);
+            margin-bottom: 2.5rem;
+            line-height: 1.8;
+        }
+
+        .hero-buttons {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .hero-stats {
+            display: flex;
+            gap: 3rem;
+            margin-top: 3rem;
+            padding-top: 2rem;
+            border-top: 1px solid var(--border);
+        }
+
+        .stat {
+            text-align: left;
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary), var(--accent-blue));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .stat-label {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        .hero-image {
+            position: relative;
+        }
+
+        .hero-image img {
+            width: 100%;
+            border-radius: 24px;
+            box-shadow:
+                0 0 0 1px rgba(255, 255, 255, 0.1),
+                0 40px 80px -20px rgba(0, 0, 0, 0.5);
+            transform: perspective(1000px) rotateY(-5deg);
+            transition: transform 0.5s;
+        }
+
+        .hero-image:hover img {
+            transform: perspective(1000px) rotateY(0deg);
+        }
+
+        .hero-image::before {
+            content: '';
+            position: absolute;
+            top: -20%;
+            right: -20%;
+            width: 60%;
+            height: 60%;
+            background: radial-gradient(circle, rgba(34, 197, 94, 0.3), transparent 70%);
+            filter: blur(60px);
+            z-index: -1;
+        }
+
+        /* Features Section */
+        .features {
+            padding: 8rem 2rem;
+            position: relative;
+        }
+
+        .section-header {
+            text-align: center;
+            max-width: 700px;
+            margin: 0 auto 5rem;
+        }
+
+        .section-label {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(59, 130, 246, 0.1);
+            padding: 0.5rem 1rem;
+            border-radius: 100px;
+            font-size: 0.875rem;
+            color: var(--accent-blue);
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        .section-title {
+            font-size: clamp(2rem, 4vw, 3rem);
+            font-weight: 800;
+            margin-bottom: 1.5rem;
+        }
+
+        .section-description {
+            font-size: 1.125rem;
+            color: var(--text-secondary);
+        }
+
+        .features-grid {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+        }
+
+        .feature-card {
+            background: rgba(20, 20, 20, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 24px;
+            padding: 2.5rem;
+            transition: all 0.4s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--primary), transparent);
+            opacity: 0;
+            transition: opacity 0.4s;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-8px);
+            border-color: rgba(34, 197, 94, 0.3);
+            box-shadow: 0 20px 40px -20px rgba(34, 197, 94, 0.2);
+        }
+
+        .feature-card:hover::before {
+            opacity: 1;
+        }
+
+        .feature-icon {
+            width: 64px;
+            height: 64px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .feature-icon.green {
+            background: rgba(34, 197, 94, 0.15);
+        }
+
+        .feature-icon.blue {
+            background: rgba(59, 130, 246, 0.15);
+        }
+
+        .feature-icon.purple {
+            background: rgba(168, 85, 247, 0.15);
+        }
+
+        .feature-icon.orange {
+            background: rgba(249, 115, 22, 0.15);
+        }
+
+        .feature-icon.pink {
+            background: rgba(236, 72, 153, 0.15);
+        }
+
+        .feature-icon.cyan {
+            background: rgba(34, 211, 238, 0.15);
+        }
+
+        .feature-card h3 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 0.75rem;
+        }
+
+        .feature-card p {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+
+        /* Screenshots Section */
+        .screenshots {
+            padding: 8rem 2rem;
+            background: var(--bg-secondary);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .screenshots::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--border), transparent);
+        }
+
+        .screenshots-container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .screenshot-tabs {
+            display: flex;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-bottom: 3rem;
+            flex-wrap: wrap;
+        }
+
+        .screenshot-tab {
+            padding: 0.875rem 1.5rem;
+            background: transparent;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            color: var(--text-secondary);
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .screenshot-tab.active,
+        .screenshot-tab:hover {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: white;
+        }
+
+        .screenshot-display {
+            position: relative;
+            border-radius: 24px;
+            overflow: hidden;
+            box-shadow:
+                0 0 0 1px rgba(255, 255, 255, 0.1),
+                0 60px 100px -30px rgba(0, 0, 0, 0.5);
+        }
+
+        .screenshot-display img {
+            width: 100%;
+            display: block;
+        }
+
+        .screenshot-item {
+            display: none;
+        }
+
+        .screenshot-item.active {
+            display: block;
+        }
+
+        /* Pricing Section */
+        .pricing {
+            padding: 8rem 2rem;
+        }
+
+        .pricing-grid {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+        }
+
+        .pricing-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 3rem 2rem;
+            position: relative;
+            transition: all 0.4s;
+        }
+
+        .pricing-card.popular {
+            background: linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(59, 130, 246, 0.05));
+            border-color: var(--primary);
+            transform: scale(1.05);
+        }
+
+        .pricing-card.popular::before {
+            content: 'Phổ biến nhất';
+            position: absolute;
+            top: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--primary);
+            color: white;
+            padding: 0.5rem 1.5rem;
+            border-radius: 100px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .pricing-card:hover {
+            transform: translateY(-8px);
+        }
+
+        .pricing-card.popular:hover {
+            transform: scale(1.05) translateY(-8px);
+        }
+
+        .pricing-name {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .pricing-description {
+            color: var(--text-muted);
+            font-size: 0.875rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .pricing-price {
+            margin-bottom: 2rem;
+        }
+
+        .pricing-amount {
+            font-size: 3rem;
+            font-weight: 800;
+        }
+
+        .pricing-period {
+            color: var(--text-muted);
+            font-size: 0.875rem;
+        }
+
+        .pricing-features {
+            list-style: none;
+            margin-bottom: 2rem;
+        }
+
+        .pricing-features li {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 0;
+            color: var(--text-secondary);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .pricing-features li::before {
+            content: '✓';
+            color: var(--primary);
+            font-weight: 700;
+            background: rgba(34, 197, 94, 0.2);
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+        }
+
+        .pricing-card .btn {
+            width: 100%;
+            justify-content: center;
+        }
+
+        /* CTA Section */
+        .cta {
+            padding: 8rem 2rem;
+            text-align: center;
+            position: relative;
+        }
+
+        .cta-content {
+            max-width: 800px;
+            margin: 0 auto;
+            background: linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(59, 130, 246, 0.05));
+            border: 1px solid rgba(34, 197, 94, 0.2);
+            border-radius: 32px;
+            padding: 5rem 3rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cta-content::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(34, 197, 94, 0.1), transparent 50%);
+            animation: rotate 20s linear infinite;
+        }
+
+        @keyframes rotate {
+            from {
+                transform: rotate(0deg);
+            }
+
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .cta h2 {
+            font-size: clamp(2rem, 4vw, 3rem);
+            font-weight: 800;
+            margin-bottom: 1.5rem;
+            position: relative;
+        }
+
+        .cta p {
+            font-size: 1.25rem;
+            color: var(--text-secondary);
+            margin-bottom: 2.5rem;
+            position: relative;
+        }
+
+        .cta-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            position: relative;
+        }
+
+        /* Footer */
+        .footer {
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border);
+            padding: 5rem 2rem 2rem;
+        }
+
+        .footer-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr;
+            gap: 4rem;
+        }
+
+        .footer-brand {
+            max-width: 300px;
+        }
+
+        .footer-brand .nav-logo {
+            margin-bottom: 1.5rem;
+        }
+
+        .footer-brand p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .social-links {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .social-links a {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.05);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+
+        .social-links a:hover {
+            background: var(--primary);
+            color: white;
+        }
+
+        .footer-column h4 {
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: var(--text-primary);
+        }
+
+        .footer-column ul {
+            list-style: none;
+        }
+
+        .footer-column li {
+            margin-bottom: 0.75rem;
+        }
+
+        .footer-column a {
+            color: var(--text-muted);
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .footer-column a:hover {
+            color: var(--primary);
+        }
+
+        .footer-bottom {
+            max-width: 1400px;
+            margin: 4rem auto 0;
+            padding-top: 2rem;
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: var(--text-muted);
+            font-size: 0.875rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .hero-content {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+
+            .hero-text {
+                max-width: 100%;
+            }
+
+            .hero-buttons,
+            .hero-stats {
+                justify-content: center;
+            }
+
+            .hero-image {
+                order: -1;
+            }
+
+            .hero-image img {
+                transform: none;
+            }
+
+            .features-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .pricing-grid {
+                grid-template-columns: 1fr;
+                max-width: 400px;
+            }
+
+            .pricing-card.popular {
+                transform: none;
+            }
+
+            .pricing-card.popular:hover {
+                transform: translateY(-8px);
+            }
+
+            .footer-content {
+                grid-template-columns: 1fr 1fr;
+                gap: 2rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .nav-content {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .nav-links {
+                display: none;
+            }
+
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .hero-stats {
+                flex-direction: column;
+                gap: 1.5rem;
+                align-items: center;
+            }
+
+            .stat {
+                text-align: center;
+            }
+
+            .footer-content {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+
+            .footer-brand {
+                max-width: 100%;
+            }
+
+            .social-links {
+                justify-content: center;
+            }
+
+            .footer-bottom {
+                flex-direction: column;
+                gap: 1rem;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="bg-gradient"></div>
+
+    <!-- Navigation -->
+    <nav class="nav">
+        <div class="nav-content">
+            <a href="#" class="nav-logo">
+                🏸 Court<span>ify</span>
+            </a>
+            <div class="nav-links">
+                <a href="#features">Tính năng</a>
+                <a href="#screenshots">Giao diện</a>
+                <a href="#pricing">Bảng giá</a>
+                <a href="huong-dan-su-dung.html">Hướng dẫn</a>
+            </div>
+            <div class="nav-cta">
+                <a href="huong-dan-su-dung.html" class="btn btn-secondary">📖 Xem hướng dẫn</a>
+                <a href="#" class="btn btn-primary">🚀 Dùng thử ngay</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-content">
+            <div class="hero-text">
+                <div class="hero-badge">
+                    <span>Phiên bản mới 2.0</span>
+                </div>
+                <h1>
+                    Quản lý sân cầu lông<br>
+                    <span class="highlight">thông minh & hiệu quả</span>
+                </h1>
+                <p class="hero-description">
+                    Giải pháp toàn diện giúp bạn quản lý đặt sân, khách hàng, doanh thu
+                    và báo cáo trong một nền tảng duy nhất. Tối ưu hóa hoạt động kinh doanh
+                    với công nghệ hiện đại.
+                </p>
+                <div class="hero-buttons">
+                    <a href="#" class="btn btn-primary">
+                        🚀 Bắt đầu miễn phí
+                    </a>
+                    <a href="huong-dan-su-dung.html" class="btn btn-secondary">
+                        📖 Xem hướng dẫn
+                    </a>
+                </div>
+                <div class="hero-stats">
+                    <div class="stat">
+                        <div class="stat-number">50+</div>
+                        <div class="stat-label">Cơ sở sử dụng</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-number">10K+</div>
+                        <div class="stat-label">Lịch đặt mỗi tháng</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-number">99.9%</div>
+                        <div class="stat-label">Uptime</div>
+                    </div>
+                </div>
+            </div>
+            <div class="hero-image">
+                <img src="images/dashboard_complete_1770260754614.png" alt="Courtify Dashboard">
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="features">
+        <div class="section-header">
+            <span class="section-label">✨ Tính năng nổi bật</span>
+            <h2 class="section-title">Mọi thứ bạn cần để quản lý sân hiệu quả</h2>
+            <p class="section-description">
+                Từ đặt sân đến báo cáo doanh thu, Courtify cung cấp đầy đủ công cụ
+                giúp bạn vận hành trơn tru
+            </p>
+        </div>
+
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon green">📅</div>
+                <h3>Lịch đặt sân trực quan</h3>
+                <p>Xem và quản lý lịch đặt theo ngày, tuần hoặc danh sách. Hỗ trợ kéo thả và check-in nhanh.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon blue">👥</div>
+                <h3>CRM khách hàng</h3>
+                <p>Quản lý thông tin khách hàng, lịch sử đặt sân và chương trình thành viên tự động.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon purple">🏢</div>
+                <h3>Đa chi nhánh</h3>
+                <p>Quản lý nhiều cơ sở, mỗi cơ sở có cấu hình riêng về sân, giá và giờ hoạt động.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon orange">📊</div>
+                <h3>Báo cáo thời gian thực</h3>
+                <p>Theo dõi doanh thu, lượt đặt và hiệu suất sân với biểu đồ SVG chuyên nghiệp.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon pink">🧾</div>
+                <h3>Hóa đơn PDF</h3>
+                <p>Tự động tạo hóa đơn chuyên nghiệp khi check-out, hỗ trợ in và gửi email.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon cyan">📦</div>
+                <h3>Quản lý kho</h3>
+                <p>Theo dõi tồn kho vợt, cầu và phụ kiện cho thuê với cảnh báo hết hàng.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Screenshots Section -->
+    <section id="screenshots" class="screenshots">
+        <div class="screenshots-container">
+            <div class="section-header">
+                <span class="section-label">📸 Giao diện</span>
+                <h2 class="section-title">Thiết kế hiện đại, dễ sử dụng</h2>
+                <p class="section-description">
+                    Giao diện tối ưu cho mọi thiết bị, từ desktop đến mobile
+                </p>
+            </div>
+
+            <div class="screenshot-tabs">
+                <button class="screenshot-tab active" data-tab="dashboard">Dashboard</button>
+                <button class="screenshot-tab" data-tab="calendar">Lịch đặt sân</button>
+                <button class="screenshot-tab" data-tab="customers">Khách hàng</button>
+                <button class="screenshot-tab" data-tab="venues">Cơ sở</button>
+                <button class="screenshot-tab" data-tab="reports">Báo cáo</button>
+            </div>
+
+            <div class="screenshot-display">
+                <div class="screenshot-item active" data-content="dashboard">
+                    <img src="images/dashboard_complete_1770260754614.png" alt="Dashboard">
+                </div>
+                <div class="screenshot-item" data-content="calendar">
+                    <img src="images/calendar_complete_1770260784787.png" alt="Lịch đặt sân">
+                </div>
+                <div class="screenshot-item" data-content="customers">
+                    <img src="images/customers_complete_1770260847258.png" alt="Khách hàng">
+                </div>
+                <div class="screenshot-item" data-content="venues">
+                    <img src="images/venues_management_page_1770262363914.png" alt="Quản lý cơ sở">
+                </div>
+                <div class="screenshot-item" data-content="reports">
+                    <img src="images/reports_complete_1770260927740.png" alt="Báo cáo">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing Section -->
+    <section id="pricing" class="pricing">
+        <div class="section-header">
+            <span class="section-label">💎 Bảng giá</span>
+            <h2 class="section-title">Gói dịch vụ phù hợp mọi quy mô</h2>
+            <p class="section-description">
+                Bắt đầu miễn phí, nâng cấp khi bạn sẵn sàng
+            </p>
+        </div>
+
+        <div class="pricing-grid">
+            <div class="pricing-card">
+                <div class="pricing-name">Starter</div>
+                <div class="pricing-description">Cho cơ sở nhỏ, mới bắt đầu</div>
+                <div class="pricing-price">
+                    <span class="pricing-amount">Miễn phí</span>
+                </div>
+                <ul class="pricing-features">
+                    <li>1 cơ sở, tối đa 4 sân</li>
+                    <li>100 lịch đặt/tháng</li>
+                    <li>Quản lý khách hàng cơ bản</li>
+                    <li>Báo cáo 7 ngày gần nhất</li>
+                    <li>Hỗ trợ email</li>
+                </ul>
+                <a href="#" class="btn btn-secondary">Bắt đầu ngay</a>
+            </div>
+
+            <div class="pricing-card popular">
+                <div class="pricing-name">Professional</div>
+                <div class="pricing-description">Cho cơ sở phát triển</div>
+                <div class="pricing-price">
+                    <span class="pricing-amount">300K</span>
+                    <span class="pricing-period">/ tháng</span>
+                </div>
+                <ul class="pricing-features">
+                    <li>3 cơ sở, không giới hạn sân</li>
+                    <li>Không giới hạn lịch đặt</li>
+                    <li>CRM + Chương trình thành viên</li>
+                    <li>Báo cáo nâng cao + Export</li>
+                    <li>Hóa đơn PDF chuyên nghiệp</li>
+                    <li>Hỗ trợ 24/7</li>
+                </ul>
+                <a href="#" class="btn btn-primary">Dùng thử 14 ngày</a>
+            </div>
+
+            <div class="pricing-card">
+                <div class="pricing-name">Enterprise</div>
+                <div class="pricing-description">Cho chuỗi sân lớn</div>
+                <div class="pricing-price">
+                    <span class="pricing-amount">Liên hệ</span>
+                </div>
+                <ul class="pricing-features">
+                    <li>Không giới hạn cơ sở & sân</li>
+                    <li>API tích hợp</li>
+                    <li>Tùy chỉnh theo yêu cầu</li>
+                    <li>Triển khai on-premise</li>
+                    <li>SLA cam kết 99.9%</li>
+                    <li>Đào tạo nhân viên</li>
+                </ul>
+                <a href="#" class="btn btn-secondary">Liên hệ</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta">
+        <div class="cta-content">
+            <h2>Sẵn sàng nâng cấp quản lý sân?</h2>
+            <p>Đăng ký ngay hôm nay và nhận 14 ngày dùng thử miễn phí tất cả tính năng</p>
+            <div class="cta-buttons">
+                <a href="#" class="btn btn-primary">
+                    🚀 Bắt đầu ngay
+                </a>
+                <a href="huong-dan-su-dung.html" class="btn btn-secondary">
+                    📖 Xem hướng dẫn sử dụng
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-brand">
+                <a href="#" class="nav-logo">
+                    🏸 Court<span>ify</span>
+                </a>
+                <p>Giải pháp quản lý sân cầu lông chuyên nghiệp, được phát triển bởi Kteam - đội ngũ chuyên gia phần mềm
+                    hàng đầu Việt Nam.</p>
+                <div class="social-links">
+                    <a href="https://facebook.com/howkteam" title="Facebook">📘</a>
+                    <a href="https://youtube.com/kteam" title="YouTube">📺</a>
+                    <a href="https://kteam.vn" title="Website">🌐</a>
+                </div>
+            </div>
+            <div class="footer-column">
+                <h4>Sản phẩm</h4>
+                <ul>
+                    <li><a href="#features">Tính năng</a></li>
+                    <li><a href="#pricing">Bảng giá</a></li>
+                    <li><a href="#screenshots">Giao diện</a></li>
+                    <li><a href="#">Cập nhật</a></li>
+                </ul>
+            </div>
+            <div class="footer-column">
+                <h4>Hỗ trợ</h4>
+                <ul>
+                    <li><a href="huong-dan-su-dung.html">Hướng dẫn sử dụng</a></li>
+                    <li><a href="#">FAQ</a></li>
+                    <li><a href="#">API Docs</a></li>
+                    <li><a href="#">Liên hệ</a></li>
+                </ul>
+            </div>
+            <div class="footer-column">
+                <h4>Liên hệ</h4>
+                <ul>
+                    <li><a href="mailto:plus.kimlong@gmail.com">📧 plus.kimlong@gmail.com</a></li>
+                    <li><a href="https://facebook.com/howkteam">📘 facebook.com/howkteam</a></li>
+                    <li><a href="https://kteam.vn">🌐 kteam.vn</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>© 2026 Courtify by Kteam. Tất cả quyền được bảo lưu.</p>
+            <p>Made with ❤️ in Vietnam</p>
+        </div>
+    </footer>
+
+    <script>
+        // Screenshot tabs
+        const tabs = document.querySelectorAll('.screenshot-tab');
+        const items = document.querySelectorAll('.screenshot-item');
+
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                const targetTab = tab.dataset.tab;
+
+                tabs.forEach(t => t.classList.remove('active'));
+                items.forEach(i => i.classList.remove('active'));
+
+                tab.classList.add('active');
+                document.querySelector(`[data-content="${targetTab}"]`).classList.add('active');
+            });
+        });
+
+        // Smooth scroll
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Nav background on scroll
+        const nav = document.querySelector('.nav');
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 100) {
+                nav.style.background = 'rgba(10, 10, 10, 0.95)';
+            } else {
+                nav.style.background = 'rgba(10, 10, 10, 0.8)';
+            }
+        });
+    </script>
+</body>
+
+</html>
