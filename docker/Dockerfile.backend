@@ -20,6 +20,7 @@ RUN cd apps/backend && npx prisma generate
 
 # Build
 RUN npm run build --workspace=@courtify/backend
+RUN if [ -d apps/backend/node_modules ]; then cp -rf apps/backend/node_modules/* node_modules/ || true; fi
 
 # Production stage
 FROM node:20-alpine
