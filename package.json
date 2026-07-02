@@ -25,7 +25,8 @@
     },
     "devDependencies": {
         "concurrently": "^8.2.2",
-        "rimraf": "^5.0.5"
+        "rimraf": "^5.0.5",
+        "ssh2": "^1.17.0"
     },
     "engines": {
         "node": ">=18.0.0",
