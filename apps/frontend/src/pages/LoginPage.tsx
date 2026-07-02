@@ -60,7 +60,15 @@ export default function LoginPage() {
     return (
         <div className="min-h-screen flex">
             {/* Left - Hero */}
-            <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-primary-600 to-primary-800 p-12 flex-col justify-between relative overflow-hidden">
+            <div 
+                className="hidden lg:flex lg:w-1/2 p-12 flex-col justify-between relative overflow-hidden"
+                style={{
+                    backgroundImage: 'url("/bg-login.png")',
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center',
+                    backgroundRepeat: 'no-repeat'
+                }}
+            >
                 {/* Background pattern */}
                 <div className="absolute inset-0 opacity-10">
                     <div className="absolute top-20 left-20 w-64 h-64 border border-white rounded-full" />
@@ -103,7 +111,15 @@ export default function LoginPage() {
             </div>
 
             {/* Right - Form */}
-            <div className="flex-1 flex items-center justify-center p-8 bg-background">
+            <div 
+                className="flex-1 flex items-center justify-center p-8 bg-background"
+                style={{
+                    backgroundImage: 'url("/bg-admin.png")',
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center',
+                    backgroundRepeat: 'no-repeat'
+                }}
+            >
                 <div className="w-full max-w-md">
                     {/* Mobile logo */}
                     <div className="lg:hidden flex items-center gap-3 mb-8 justify-center">
@@ -122,7 +138,7 @@ export default function LoginPage() {
                         <Input
                             label="Email"
                             type="email"
-                            placeholder="admin@courtify.vn"
+                            placeholder="admin@courthub.vn"
                             icon={<Mail className="w-4 h-4" />}
                             error={errors.email?.message}
                             {...register('email')}
@@ -173,9 +189,9 @@ export default function LoginPage() {
                     <div className="mt-8 p-4 bg-background-secondary rounded-lg border border-border">
                         <p className="text-xs text-foreground-muted mb-2">Tài khoản demo:</p>
                         <div className="space-y-1 text-xs text-foreground-secondary">
-                            <p><strong>Admin:</strong> admin@courtify.vn / admin123</p>
-                            <p><strong>Manager:</strong> manager@courtify.vn / manager123</p>
-                            <p><strong>Staff:</strong> staff@courtify.vn / staff123</p>
+                            <p><strong>Admin:</strong> admin@courthub.vn / admin123</p>
+                            <p><strong>Manager:</strong> manager@courthub.vn / manager123</p>
+                            <p><strong>Staff:</strong> staff@courthub.vn / staff123</p>
                         </div>
                     </div>
                 </div>

@@ -318,7 +318,7 @@ export default function VenuesPage() {
                                     <Input
                                         value={formData.name}
                                         onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                        placeholder="VD: CourtHub Phú Nhuận"
+                                        placeholder="VD: CourtHub"
                                         required
                                     />
                                 </div>
@@ -330,7 +330,7 @@ export default function VenuesPage() {
                                     <Input
                                         value={formData.address}
                                         onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                                        placeholder="VD: 123 Nguyễn Văn Trỗi, Quận Phú Nhuận"
+                                        placeholder="VD: 200 Nguyễn Lương Bằng, Đà Nẵng"
                                         required
                                     />
                                 </div>

@@ -86,7 +86,7 @@ export default function PrintInvoicePage() {
                         <h1 className="text-3xl font-bold text-primary-600">COURTHUB</h1>
                         <p className="text-gray-600 mt-1">Hệ thống quản lý sân cầu lông</p>
                         <div className="mt-2 text-sm text-gray-500">
-                            <p>123 Phan Xích Long, Phú Nhuận, TP.HCM</p>
+                            <p>200 Nguyễn Lương Bằng, Đà Nẵng</p>
                             <p>Hotline: 028 1234 5678</p>
                             <p>Email: info@courthub.vn</p>
                         </div>

@@ -10,7 +10,6 @@ import {
     Settings,
     LogOut,
     Search,
-    ChevronDown,
     Package,
     Building2,
     RefreshCw
@@ -136,12 +135,6 @@ export function AppLayout({ children }: AppLayoutProps) {
                             <span className="hidden lg:inline">Tải lại</span>
                         </Button>
 
-                        {/* Venue selector - hidden on mobile */}
-                        <Button variant="secondary" size="sm" className="hidden sm:flex gap-2">
-                            <span className="hidden lg:inline">CourtHub Phú Nhuận</span>
-                            <span className="lg:hidden">Cơ sở</span>
-                            <ChevronDown className="w-4 h-4" />
-                        </Button>
 
                         {/* Notifications */}
                         <NotificationDropdown />

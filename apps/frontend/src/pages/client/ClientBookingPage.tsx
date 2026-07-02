@@ -377,16 +377,14 @@ export default function ClientBookingPage() {
                                 <div className="absolute inset-x-0 top-1/2 h-px bg-white/70" />
                                 <div className="absolute inset-6 border border-white/40" />
                             </div>
-                            <div className="absolute bottom-4 left-4 rounded-lg bg-black/50 px-3 py-2 text-sm backdrop-blur">
-                                CourtHub Phú Nhuận · 08:00 - 23:00
-                            </div>
+
                         </div>
                     </div>
                 </div>
 
                 <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_380px]">
-                    <div className="space-y-6">
-                        <div className="rounded-xl border border-border bg-background-secondary p-4">
+                    <div className="space-y-6 min-w-0">
+                        <div className="rounded-xl border border-border bg-background-secondary p-4 min-w-0 overflow-hidden">
                             <StepRail activeIndex={activeStep} />
                         </div>
 

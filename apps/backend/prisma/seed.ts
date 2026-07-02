@@ -25,7 +25,7 @@ async function main() {
     const adminPassword = await bcrypt.hash('admin123', 12);
     const admin = await prisma.user.create({
         data: {
-            email: 'admin@courtify.vn',
+            email: 'admin@courthub.vn',
             passwordHash: adminPassword,
             name: 'Super Admin',
             phone: '0901234567',
@@ -38,7 +38,7 @@ async function main() {
     const managerPassword = await bcrypt.hash('manager123', 12);
     const manager = await prisma.user.create({
         data: {
-            email: 'manager@courtify.vn',
+            email: 'manager@courthub.vn',
             passwordHash: managerPassword,
             name: 'Nguyễn Văn Quản Lý',
             phone: '0902345678',
@@ -51,7 +51,7 @@ async function main() {
     const staffPassword = await bcrypt.hash('staff123', 12);
     const staff1 = await prisma.user.create({
         data: {
-            email: 'staff@courtify.vn',
+            email: 'staff@courthub.vn',
             passwordHash: staffPassword,
             name: 'Trần Thị Nhân Viên',
             phone: '0903456789',
@@ -61,7 +61,7 @@ async function main() {
 
     const staff2 = await prisma.user.create({
         data: {
-            email: 'staff2@courtify.vn',
+            email: 'staff2@courthub.vn',
             passwordHash: staffPassword,
             name: 'Lê Văn Ca Tối',
             phone: '0904567890',
@@ -73,10 +73,10 @@ async function main() {
     // Create venues
     const venue1 = await prisma.venue.create({
         data: {
-            name: 'Courtify Phú Nhuận',
+            name: 'CourtHub Phú Nhuận',
             address: '123 Phan Xích Long, Phường 2, Quận Phú Nhuận, TP.HCM',
             phone: '028 1234 5678',
-            email: 'phunhuan@courtify.vn',
+            email: 'phunhuan@courthub.vn',
             description: 'Sân cầu lông cao cấp tại Phú Nhuận với 4 sân tiêu chuẩn quốc tế',
             openTime: '06:00',
             closeTime: '23:00',
@@ -85,10 +85,10 @@ async function main() {
 
     const venue2 = await prisma.venue.create({
         data: {
-            name: 'Courtify Quận 7',
+            name: 'CourtHub Quận 7',
             address: '456 Nguyễn Thị Thập, Quận 7, TP.HCM',
             phone: '028 2345 6789',
-            email: 'quan7@courtify.vn',
+            email: 'quan7@courthub.vn',
             description: 'Sân cầu lông hiện đại tại Quận 7 với view sông Sài Gòn',
             openTime: '06:00',
             closeTime: '23:00',
@@ -623,9 +623,9 @@ async function main() {
 
     console.log('\n🎉 Database seeding completed!');
     console.log('\n📝 Test accounts:');
-    console.log('   Admin:    admin@courtify.vn / admin123');
-    console.log('   Manager:  manager@courtify.vn / manager123');
-    console.log('   Staff:    staff@courtify.vn / staff123');
+    console.log('   Admin:    admin@courthub.vn / admin123');
+    console.log('   Manager:  manager@courthub.vn / manager123');
+    console.log('   Staff:    staff@courthub.vn / staff123');
     console.log('\n📊 Seed data summary:');
     console.log(`   - ${customers.length} customers`);
     console.log(`   - ${bookingCount} bookings`);
